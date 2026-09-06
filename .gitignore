@@ -68,3 +68,4 @@ vcpkg_installed/
 Testing/
 .cache/
 /.vs
+/Lab_01/.vs/Lab_01

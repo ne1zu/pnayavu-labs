@@ -24,12 +24,18 @@
     <ClCompile Include="doctor.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="filial.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="service.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="doctor.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="filial.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

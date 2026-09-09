@@ -24,8 +24,8 @@ void Doctor::setExperience(int experience) {
 }
 
 void Doctor::printInfo() const {
-    std::cout << "Врач #" << id << "\n";
-    std::cout << "ФИО: " << fio << "\n";
-    std::cout << "Специальность: " << specialty << "\n";
-    std::cout << "Стаж: " << experience << " лет\n";
+    std::cout << "Doctor #" << id << "\n";
+    std::cout << "  Name: " << fio << "\n";
+    std::cout << "  Specialty: " << specialty << "\n";
+    std::cout << "  Experience: " << experience << " years\n";
 }

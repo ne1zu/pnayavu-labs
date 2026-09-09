@@ -1,2 +1,0 @@
-C:\Users\user\source\repos\pnayavu-labs\Lab_01\x64\Debug\Lab_01.exe.lastcodeanalysissucceeded
-C:\Users\user\source\repos\pnayavu-labs\Lab_01\Lab_01\x64\Debug\NativeCodeAnalysis.read.1.tlog

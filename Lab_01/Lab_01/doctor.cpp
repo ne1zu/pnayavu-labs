@@ -16,13 +16,8 @@ std::string Doctor::getSpecialty() const { return specialty; }
 int Doctor::getExperience() const { return experience; }
 
 void Doctor::setFio(const std::string& fioValue) { fio = fioValue; }
-void Doctor::setSpecialty(const std::string& specialty) {
-    this->specialty = specialty;
-}
-
-void Doctor::setExperience(int experience) {
-    this->experience = experience;
-}
+void Doctor::setSpecialty(const std::string& specialtyValue) { specialty = specialtyValue; }
+void Doctor::setExperience(int experience) { this->experience = experience; }
 
 void Doctor::printInfo() const {
     std::cout << "Doctor #" << id << "\n";

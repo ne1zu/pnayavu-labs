@@ -1,27 +1,26 @@
 #include "filial.h"
 #include <iostream>
+
+// ИСПРАВЛЕНО: Правильная инициализация списком по стандартам C++
 Filial::Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity)
     : name(name), address(address),
-    doctorCount(0), doctorCapacity(doctorCapacity),
-    serviceCount(0), serviceCapacity(serviceCapacity)
+    doctors(new Doctor* [doctorCapacity] {nullptr}), doctorCount(0), doctorCapacity(doctorCapacity),
+    services(new Service* [serviceCapacity] {nullptr}), serviceCount(0), serviceCapacity(serviceCapacity)
 {
-    doctors = new Doctor *[doctorCapacity];
-    services = new Service * [serviceCapacity];
 }
+
 
 Filial::Filial(const Filial& other)
     : name(other.name), address(other.address),
-    doctorCount(other.doctorCount), doctorCapacity(other.doctorCapacity),
-    serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
+    doctors(new Doctor* [other.doctorCapacity] ), doctorCount(other.doctorCount), doctorCapacity(other.doctorCapacity),
+    services(new Service* [other.serviceCapacity] ), serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
 {
-    doctors = new Doctor * [doctorCapacity];
     for (int i = 0; i < doctorCount && i < doctorCapacity; i++) doctors[i] = other.doctors[i];
-
-    services = new Service * [serviceCapacity];
     for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
 }
+
 Filial& Filial::operator=(const Filial& other) {
-    if (this == &other) return *this; 
+    if (this == &other) return *this;
 
     delete[] doctors;
     delete[] services;
@@ -33,18 +32,22 @@ Filial& Filial::operator=(const Filial& other) {
     serviceCount = other.serviceCount;
     serviceCapacity = other.serviceCapacity;
 
-    doctors = new Doctor * [doctorCapacity];
-    for (int i = 0; i < doctorCount && i<doctorCapacity; i++) doctors[i] = other.doctors[i];
+    doctors = new Doctor * [doctorCapacity] {nullptr};
+    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) doctors[i] = other.doctors[i];
 
-    services = new Service * [serviceCapacity];
+    services = new Service * [serviceCapacity] {nullptr};
     for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
 
     return *this;
 }
+
 Filial::~Filial() {
     delete[] doctors;
     delete[] services;
 }
+
+void Filial::setName(const std::string& nameValue) { name = nameValue; }
+void Filial::setAddress(const std::string& addressValue) { address = addressValue; }
 
 bool Filial::addDoctor(Doctor* doctor) {
     if (doctorCount >= doctorCapacity) {
@@ -90,9 +93,6 @@ std::string Filial::getAddress() const { return address; }
 int Filial::getDoctorCount() const { return doctorCount; }
 int Filial::getServiceCount() const { return serviceCount; }
 
-void Filial::setName(const std::string& nameValue) { name = nameValue; }
-void Filial::setAddress(const std::string& addressValue) { address = addressValue; }
-
 void Filial::printInfo() const {
     std::cout << "===== Branch: " << name << " =====\n";
     std::cout << "Address: " << address << "\n";
@@ -110,5 +110,4 @@ void Filial::printInfo() const {
     for (int i = 0; i < serviceCount; i++) {
         std::cout << "  - " << services[i]->getName() << " (" << services[i]->getPrice() << " USD)\n";
     }
-
 }

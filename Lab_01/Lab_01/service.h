@@ -18,6 +18,7 @@ public:
     float getPrice() const;
     int getLength() const;
 
+    void setName(const std::string& nameValue);
     void setPrice(float priceValue);
     void setLength(int lengthValue);
 

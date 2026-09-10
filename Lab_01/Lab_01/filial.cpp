@@ -15,10 +15,10 @@ Filial::Filial(const Filial& other)
     serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
 {
     doctors = new Doctor * [doctorCapacity];
-    for (int i = 0; i < doctorCount; i++) doctors[i] = other.doctors[i];
+    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) doctors[i] = other.doctors[i];
 
     services = new Service * [serviceCapacity];
-    for (int i = 0; i < serviceCount; i++) services[i] = other.services[i];
+    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
 }
 Filial& Filial::operator=(const Filial& other) {
     if (this == &other) return *this; 
@@ -34,10 +34,10 @@ Filial& Filial::operator=(const Filial& other) {
     serviceCapacity = other.serviceCapacity;
 
     doctors = new Doctor * [doctorCapacity];
-    for (int i = 0; i < doctorCount; i++) doctors[i] = other.doctors[i];
+    for (int i = 0; i < doctorCount && i<doctorCapacity; i++) doctors[i] = other.doctors[i];
 
     services = new Service * [serviceCapacity];
-    for (int i = 0; i < serviceCount; i++) services[i] = other.services[i];
+    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
 
     return *this;
 }
@@ -90,6 +90,9 @@ std::string Filial::getAddress() const { return address; }
 int Filial::getDoctorCount() const { return doctorCount; }
 int Filial::getServiceCount() const { return serviceCount; }
 
+void Filial::setName(const std::string& nameValue) { name = nameValue; }
+void Filial::setAddress(const std::string& addressValue) { address = addressValue; }
+
 void Filial::printInfo() const {
     std::cout << "===== Branch: " << name << " =====\n";
     std::cout << "Address: " << address << "\n";
@@ -107,4 +110,5 @@ void Filial::printInfo() const {
     for (int i = 0; i < serviceCount; i++) {
         std::cout << "  - " << services[i]->getName() << " (" << services[i]->getPrice() << " USD)\n";
     }
+
 }

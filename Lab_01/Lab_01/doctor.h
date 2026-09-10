@@ -18,6 +18,7 @@ public:
     std::string getSpecialty() const;
     int getExperience() const;
 
+    void setFio(const std::string& fioValue);
     void setSpecialty(const std::string& specialty);
     void setExperience(int experience);
 

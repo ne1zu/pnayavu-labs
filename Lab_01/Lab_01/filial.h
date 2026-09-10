@@ -32,5 +32,8 @@ public:
     int getDoctorCount() const;
     int getServiceCount() const;
 
+    void setName(const std::string& nameValue);
+    void setAddress(const std::string& addressValue);
+
     void printInfo() const;
 };

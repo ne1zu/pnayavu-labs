@@ -15,6 +15,7 @@ std::string Service::getName() const { return name; }
 float Service::getPrice() const { return price; }
 int Service::getLength() const { return length; }
 
+void Service::setName(const std::string& nameValue) { name = nameValue; }
 void Service::setPrice(float priceValue) { price = priceValue; }
 void Service::setLength(int lengthValue) { length = lengthValue; }
 

@@ -151,7 +151,7 @@ int main() {
         std::cout << "1. View all Branches\n2. View all Doctors\n3. View all Services\n";
         std::cout << "4. Assign Doctor to a Branch\n5. Assign Service to a Branch\n";
         std::cout << "6. Check Service availability\n7. Edit Service\n8. Edit Doctor\n9. Edit Branch\n";
-        std::cout << "10. CREATE NEW SERVICE\n11. CREATE NEW DOCTOR\n12. CREATE NEW BRANCH\n0. Exit\n";
+        std::cout << "0. Exit\n";
         std::cout << "Select an option: ";
         std::cin >> choice;
 
@@ -198,41 +198,6 @@ int main() {
         case 7: handleEditService(allServices, currentServiceCount); break;
         case 8: handleEditDoctor(allDoctors, currentDoctorCount); break;
         case 9: handleEditBranch(allFilials, currentFilialCount); break;
-
-        case 10: {
-            if (currentServiceCount < MAX_CAPACITY) {
-                std::string n; float p; int l;
-                std::cout << "Enter name (no spaces): "; std::cin >> n;
-                std::cout << "Enter price: "; std::cin >> p;
-                std::cout << "Enter duration (min): "; std::cin >> l;
-                allServices[currentServiceCount++] = new Service(n, p, l);
-                std::cout << "Service created!\n";
-            }
-            break;
-        }
-        case 11: {
-            if (currentDoctorCount < MAX_CAPACITY) {
-                std::string n, s; int e;
-                std::cout << "Enter name (no spaces): "; std::cin >> n;
-                std::cout << "Enter specialty: "; std::cin >> s;
-                std::cout << "Enter experience (years): "; std::cin >> e;
-                allDoctors[currentDoctorCount++] = new Doctor(n, s, e);
-                std::cout << "Doctor created!\n";
-            }
-            break;
-        }
-        case 12: {
-            if (currentFilialCount < MAX_CAPACITY) {
-                std::string n, a; int dc, sc;
-                std::cout << "Enter branch name: "; std::cin >> n;
-                std::cout << "Enter address: "; std::cin >> a;
-                std::cout << "Max doctors capacity: "; std::cin >> dc;
-                std::cout << "Max services capacity: "; std::cin >> sc;
-                allFilials[currentFilialCount++] = new Filial(n, a, dc, sc);
-                std::cout << "Branch created!\n";
-            }
-            break;
-        }
         case 0: std::cout << "Goodbye!\n"; break;
         default: std::cout << "Wrong option!\n"; break; 
         }

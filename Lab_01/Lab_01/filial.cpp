@@ -1,7 +1,6 @@
 #include "filial.h"
 #include <iostream>
 
-// ИСПРАВЛЕНО: Правильная инициализация списком по стандартам C++
 Filial::Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity)
     : name(name), address(address),
     doctors(new Doctor* [doctorCapacity] {nullptr}), doctorCount(0), doctorCapacity(doctorCapacity),
@@ -9,14 +8,17 @@ Filial::Filial(const std::string& name, const std::string& address, int doctorCa
 {
 }
 
-
 Filial::Filial(const Filial& other)
     : name(other.name), address(other.address),
-    doctors(new Doctor* [other.doctorCapacity] ), doctorCount(other.doctorCount), doctorCapacity(other.doctorCapacity),
-    services(new Service* [other.serviceCapacity] ), serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
+    doctors(new Doctor* [other.doctorCapacity] {nullptr}), doctorCount(other.doctorCount), doctorCapacity(other.doctorCapacity),
+    services(new Service* [other.serviceCapacity] {nullptr}), serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
 {
-    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) doctors[i] = other.doctors[i];
-    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
+    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) {
+        doctors[i] = other.doctors[i];
+    }
+    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) {
+        services[i] = other.services[i];
+    }
 }
 
 Filial& Filial::operator=(const Filial& other) {
@@ -33,10 +35,14 @@ Filial& Filial::operator=(const Filial& other) {
     serviceCapacity = other.serviceCapacity;
 
     doctors = new Doctor * [doctorCapacity] {nullptr};
-    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) doctors[i] = other.doctors[i];
+    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) {
+        doctors[i] = other.doctors[i];
+    }
 
     services = new Service * [serviceCapacity] {nullptr};
-    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) services[i] = other.services[i];
+    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) {
+        services[i] = other.services[i];
+    }
 
     return *this;
 }
@@ -46,44 +52,49 @@ Filial::~Filial() {
     delete[] services;
 }
 
-void Filial::setName(const std::string& nameValue) { name = nameValue; }
-void Filial::setAddress(const std::string& addressValue) { address = addressValue; }
+void Filial::setName(const std::string& newName) { name = newName; }
+void Filial::setAddress(const std::string& newAddress) { address = newAddress; }
 
 bool Filial::addDoctor(Doctor* doctor) {
+    // 1. Проверка на вместимость
     if (doctorCount >= doctorCapacity) {
-        std::cout << "Error: branch \"" << name << "\" is full, cannot add doctor "
-            << doctor->getFio() << " (capacity: " << doctorCapacity << ")\n";
+        std::cout << "[ERROR] Filial \"" << name << "\" is full. Cannot add doctor.\n";
         return false;
     }
+    // 2. ИСПРАВЛЕНИЕ: Проверка на дубликаты (чтобы не добавить того же врача дважды)
+    for (int i = 0; i < doctorCount; i++) {
+        if (doctors[i]->getId() == doctor->getId()) {
+            std::cout << "[WARNING] Doctor is already assigned to this filial.\n";
+            return false;
+        }
+    }
+
     doctors[doctorCount] = doctor;
     doctorCount++;
-    std::cout << "Doctor " << doctor->getFio() << " added to branch \"" << name << "\"\n";
+    std::cout << "[SUCCESS] Doctor " << doctor->getFio() << " assigned to filial \"" << name << "\".\n";
     return true;
 }
 
 bool Filial::addService(Service* service) {
     if (serviceCount >= serviceCapacity) {
-        std::cout << "Error: branch \"" << name << "\" cannot offer more services "
-            << "(capacity: " << serviceCapacity << ")\n";
+        std::cout << "[ERROR] Filial \"" << name << "\" cannot offer more services.\n";
         return false;
     }
     for (int i = 0; i < serviceCount; i++) {
         if (services[i]->getId() == service->getId()) {
-            std::cout << "Service \"" << service->getName() << "\" is already available in branch \"" << name << "\"\n";
+            std::cout << "[WARNING] Service is already available in this filial.\n";
             return false;
         }
     }
     services[serviceCount] = service;
     serviceCount++;
-    std::cout << "Service \"" << service->getName() << "\" added to branch \"" << name << "\"\n";
+    std::cout << "[SUCCESS] Service \"" << service->getName() << "\" added to filial.\n";
     return true;
 }
 
 bool Filial::isServiceAvailable(int serviceId) const {
     for (int i = 0; i < serviceCount; i++) {
-        if (services[i]->getId() == serviceId) {
-            return true;
-        }
+        if (services[i]->getId() == serviceId) return true;
     }
     return false;
 }
@@ -94,19 +105,17 @@ int Filial::getDoctorCount() const { return doctorCount; }
 int Filial::getServiceCount() const { return serviceCount; }
 
 void Filial::printInfo() const {
-    std::cout << "===== Branch: " << name << " =====\n";
+    std::cout << "\n=== FILIAL: " << name << " ===\n";
     std::cout << "Address: " << address << "\n";
+
     std::cout << "Doctors (" << doctorCount << "/" << doctorCapacity << "):\n";
-    if (doctorCount == 0) {
-        std::cout << "  (no doctors)\n";
-    }
+    if (doctorCount == 0) std::cout << "  (Empty)\n";
     for (int i = 0; i < doctorCount; i++) {
         std::cout << "  - " << doctors[i]->getFio() << " (" << doctors[i]->getSpecialty() << ")\n";
     }
+
     std::cout << "Services (" << serviceCount << "/" << serviceCapacity << "):\n";
-    if (serviceCount == 0) {
-        std::cout << "  (no services)\n";
-    }
+    if (serviceCount == 0) std::cout << "  (Empty)\n";
     for (int i = 0; i < serviceCount; i++) {
         std::cout << "  - " << services[i]->getName() << " (" << services[i]->getPrice() << " USD)\n";
     }

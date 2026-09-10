@@ -4,37 +4,37 @@
 #include "doctor.h"
 #include "filial.h"
 
-void printAllDoctors(Doctor** list, int count) {
+void static printAllDoctors(Doctor** list, int count) {
     if (count == 0) { std::cout << "(Database is empty)\n"; return; }
     for (int i = 0; i < count; i++) {
-        std::cout << i + 1 << ". " << list[i]->getFio() << " (" << list[i]->getSpecialty() << ")\n";
+        std::cout << i + 1 << ". " << list[i]->getFio() << " (" << list[i]->getSpecialty() << "," << list[i]->getExperience() << " Years)\n";
     }
 }
 
-void printAllServices(Service** list, int count) {
+void static printAllServices(Service** list, int count) {
     if (count == 0) { std::cout << "(Database is empty)\n"; return; }
     for (int i = 0; i < count; i++) {
-        std::cout << i + 1 << ". " << list[i]->getName() << " (" << list[i]->getPrice() << " USD)\n";
+        std::cout << i + 1 << ". " << list[i]->getName() << " (" << list[i]->getPrice() << " USD," << list[i]->getLength() << " min)\n";
     }
 }
 
-void printAllFilials(Filial** list, int count) {
+void static printAllFilials(Filial** list, int count) {
     if (count == 0) { std::cout << "(Database is empty)\n"; return; }
     for (int i = 0; i < count; i++) {
         std::cout << i + 1 << ". " << list[i]->getName() << "\n";
     }
 }
 
-void handleEditService(Service** allServices, int serviceTotal) {
+void static handleEditService(Service** allServices, int serviceTotal) {
     std::cout << "Select Service to edit:\n";
     printAllServices(allServices, serviceTotal);
     int s; std::cin >> s; s--;
 
     if (s >= 0 && s < serviceTotal) {
+        allServices[s]->printInfo();
         int subChoice = -1;
         while (subChoice != 0) {
-            std::cout << "\n--- Editing Service: " << allServices[s]->getName() << " ---\n";
-            std::cout << "1. Edit Name\n2. Edit Price\n3. Edit Duration\n0. Back\nChoice: ";
+            std::cout << "\n1. Edit Name\n2. Edit Price\n3. Edit Duration\n0. Back\nChoice: ";
             std::cin >> subChoice;
 
             switch (subChoice) {
@@ -51,23 +51,26 @@ void handleEditService(Service** allServices, int serviceTotal) {
                 allServices[s]->setLength(l); std::cout << "Updated!\n"; break;
             }
             case 0: break;
-            default: std::cout << "Invalid input!\n"; break; 
+            default: std::cout << "Invalid input!\n"; break;
+            }
+            if (subChoice >= 1 && subChoice <= 3) {
+                allServices[s]->printInfo();
             }
         }
     }
     else { std::cout << "Invalid input!\n"; }
 }
 
-void handleEditDoctor(Doctor** allDoctors, int doctorTotal) {
+void static handleEditDoctor(Doctor** allDoctors, int doctorTotal) {
     std::cout << "Select Doctor to edit:\n";
     printAllDoctors(allDoctors, doctorTotal);
     int d; std::cin >> d; d--;
 
     if (d >= 0 && d < doctorTotal) {
+        allDoctors[d]->printInfo();
         int subChoice = -1;
         while (subChoice != 0) {
-            std::cout << "\n--- Editing Doctor: " << allDoctors[d]->getFio() << " ---\n";
-            std::cout << "1. Edit Name\n2. Edit Specialty\n3. Edit Experience\n0. Back\nChoice: ";
+            std::cout << "\n1. Edit Name\n2. Edit Specialty\n3. Edit Experience\n0. Back\nChoice: ";
             std::cin >> subChoice;
 
             switch (subChoice) {
@@ -84,23 +87,26 @@ void handleEditDoctor(Doctor** allDoctors, int doctorTotal) {
                 allDoctors[d]->setExperience(exp); std::cout << "Updated!\n"; break;
             }
             case 0: break;
-            default: std::cout << "Invalid input!\n"; break; 
+            default: std::cout << "Invalid input!\n"; break;
+            }
+            if (subChoice >= 1 && subChoice <= 3) {
+                allDoctors[d]->printInfo();
             }
         }
     }
     else { std::cout << "Invalid input!\n"; }
 }
 
-void handleEditBranch(Filial** allFilials, int filialTotal) {
+void static handleEditBranch(Filial** allFilials, int filialTotal) {
     std::cout << "Select Branch to edit:\n";
     printAllFilials(allFilials, filialTotal);
     int f; std::cin >> f; f--;
 
     if (f >= 0 && f < filialTotal) {
+        allFilials[f]->printInfo();
         int subChoice = -1;
         while (subChoice != 0) {
-            std::cout << "\n--- Editing Branch: " << allFilials[f]->getName() << " ---\n";
-            std::cout << "1. Edit Name\n2. Edit Address\n0. Back\nChoice: ";
+            std::cout << "\n1. Edit Name\n2. Edit Address\n0. Back\nChoice: ";
             std::cin >> subChoice;
 
             switch (subChoice) {
@@ -113,14 +119,15 @@ void handleEditBranch(Filial** allFilials, int filialTotal) {
                 allFilials[f]->setAddress(newAddr); std::cout << "Updated!\n"; break;
             }
             case 0: break;
-            default: std::cout << "Invalid input!\n"; break; 
+            default: std::cout << "Invalid input!\n"; break;
+            }
+            if (subChoice >= 1 && subChoice <= 2) {
+                allFilials[f]->printInfo();
             }
         }
     }
     else { std::cout << "Invalid input!\n"; }
 }
-
-
 
 int main() {
     const int MAX_CAPACITY = 20;
@@ -135,15 +142,27 @@ int main() {
 
     allServices[currentServiceCount++] = new Service("Massage", 50.0f, 30);
     allServices[currentServiceCount++] = new Service("Therapist_consultation", 25.5f, 15);
+    allServices[currentServiceCount++] = new Service("Xray", 35.0f, 10);
+    allServices[currentServiceCount++] = new Service("Ultrasound", 40.0f, 20);
+    allServices[currentServiceCount++] = new Service("Dental_checkup", 30.0f, 25);
 
     allDoctors[currentDoctorCount++] = new Doctor("Ivanov_Ivan", "Therapist", 5);
     allDoctors[currentDoctorCount++] = new Doctor("Petrova_Anna", "Surgeon", 10);
+    allDoctors[currentDoctorCount++] = new Doctor("Sidorov_Petr", "Masseur", 3);
+    allDoctors[currentDoctorCount++] = new Doctor("Kuznetsova_Olga", "Dentist", 8);
 
-    allFilials[currentFilialCount++] = new Filial("Central", "Main_st_10", 5, 5);
+
+    allFilials[currentFilialCount++] = new Filial("Central", "Main_st_10", 2, 3);
     allFilials[currentFilialCount++] = new Filial("North", "Peace_st_25", 5, 5);
 
     allFilials[0]->addDoctor(allDoctors[0]);
+    allFilials[0]->addDoctor(allDoctors[1]);
     allFilials[0]->addService(allServices[0]);
+    allFilials[0]->addService(allServices[1]);
+
+    allFilials[1]->addDoctor(allDoctors[2]);
+    allFilials[1]->addService(allServices[2]);
+    allFilials[1]->addService(allServices[3]);
 
     int choice = -1;
     while (choice != 0) {
@@ -158,11 +177,14 @@ int main() {
         switch (choice) {
         case 1:
             for (int i = 0; i < currentFilialCount; i++) {
+                std::cout << "[" << allFilials[i]->getName() << "] " << allFilials[i]->getAddress()
+                    << " -- doctors: " << allFilials[i]->getDoctorCount()
+                    << ", services: " << allFilials[i]->getServiceCount() << "\n";
                 allFilials[i]->printInfo(); std::cout << "\n";
             }
             break;
-        case 2: printAllDoctors(allDoctors, currentDoctorCount); break;
-        case 3: printAllServices(allServices, currentServiceCount); break;
+        case 2: std::cout << "Doctors:\n"; printAllDoctors(allDoctors, currentDoctorCount); break;
+        case 3: std::cout << "Services:\n"; printAllServices(allServices, currentServiceCount); break;
 
         case 4: {
             printAllFilials(allFilials, currentFilialCount);
@@ -194,18 +216,17 @@ int main() {
             break;
         }
 
-             
         case 7: handleEditService(allServices, currentServiceCount); break;
         case 8: handleEditDoctor(allDoctors, currentDoctorCount); break;
         case 9: handleEditBranch(allFilials, currentFilialCount); break;
         case 0: std::cout << "Goodbye!\n"; break;
-        default: std::cout << "Wrong option!\n"; break; 
+        default: std::cout << "Wrong option!\n"; break;
         }
     }
 
+    for (int i = 0; i < currentFilialCount; i++) delete allFilials[i];
     for (int i = 0; i < currentServiceCount; i++) delete allServices[i];
     for (int i = 0; i < currentDoctorCount; i++) delete allDoctors[i];
-    for (int i = 0; i < currentFilialCount; i++) delete allFilials[i];
 
     return 0;
 }

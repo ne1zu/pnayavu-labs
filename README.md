@@ -9,9 +9,5 @@
 
 * `Lab_01/` - Классы и объекты
 
-##  Чем собирался код (Инструментарий)
-
-* **IDE:** Visual Studio 2022
-* **Компилятор:** MSVC (Microsoft Visual C++)
-
+Ссыла на SonarCloud - https://sonarcloud.io/summary/new_code?id=ne1zu_pnayavu-labs&branch=main
 

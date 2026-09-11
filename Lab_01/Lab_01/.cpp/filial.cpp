@@ -1,4 +1,4 @@
-#include "filial.h"
+#include "C:\Users\user\source\repos\pnayavu-labs\Lab_01\Lab_01\.h\filial.h"
 #include <iostream>
 
 Filial::Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity)
@@ -56,39 +56,37 @@ void Filial::setName(const std::string& newName) { name = newName; }
 void Filial::setAddress(const std::string& newAddress) { address = newAddress; }
 
 bool Filial::addDoctor(Doctor* doctor) {
-    // 1. Проверка на вместимость
     if (doctorCount >= doctorCapacity) {
+
         std::cout << "[ERROR] Filial \"" << name << "\" is full. Cannot add doctor.\n";
         return false;
-    }
-    // 2. ИСПРАВЛЕНИЕ: Проверка на дубликаты (чтобы не добавить того же врача дважды)
-    for (int i = 0; i < doctorCount; i++) {
+    }    for (int i = 0; i < doctorCount; i++) {
         if (doctors[i]->getId() == doctor->getId()) {
-            std::cout << "[WARNING] Doctor is already assigned to this filial.\n";
+            std::cout << " Doctor is already assigned to this filial.\n";
             return false;
         }
     }
 
     doctors[doctorCount] = doctor;
     doctorCount++;
-    std::cout << "[SUCCESS] Doctor " << doctor->getFio() << " assigned to filial \"" << name << "\".\n";
+    std::cout << " Doctor " << doctor->getFio() << " assigned to filial \"" << name << "\".\n";
     return true;
 }
 
 bool Filial::addService(Service* service) {
     if (serviceCount >= serviceCapacity) {
-        std::cout << "[ERROR] Filial \"" << name << "\" cannot offer more services.\n";
+        std::cout << " Filial \"" << name << "\" cannot offer more services.\n";
         return false;
     }
     for (int i = 0; i < serviceCount; i++) {
         if (services[i]->getId() == service->getId()) {
-            std::cout << "[WARNING] Service is already available in this filial.\n";
+            std::cout << " Service is already available in this filial.\n";
             return false;
         }
     }
     services[serviceCount] = service;
     serviceCount++;
-    std::cout << "[SUCCESS] Service \"" << service->getName() << "\" added to filial.\n";
+    std::cout << " Service \"" << service->getName() << "\" added to filial.\n";
     return true;
 }
 

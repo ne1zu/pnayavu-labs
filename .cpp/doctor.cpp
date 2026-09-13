@@ -1,4 +1,4 @@
-#include "C:\Users\user\source\repos\pnayavu-labs\.h\doctor.h"
+#include "doctor.h"
 #include <iostream>
 
 int Doctor::counter = 0;

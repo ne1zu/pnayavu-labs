@@ -1,8 +1,8 @@
 ﻿#include <iostream>
 #include <string>
-#include "C:\Users\user\source\repos\pnayavu-labs\.h\service.h"
-#include "C:\Users\user\source\repos\pnayavu-labs\.h\doctor.h"
-#include "C:\Users\user\source\repos\pnayavu-labs\.h\filial.h"
+#include "service.h"
+#include "doctor.h"
+#include "filial.h"
 
 void static printAllDoctors(Doctor** list, int count) {
     if (count == 0) { std::cout << "(Database is empty)\n"; return; }

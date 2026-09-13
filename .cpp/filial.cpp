@@ -1,4 +1,4 @@
-#include "C:\Users\user\source\repos\pnayavu-labs\Lab_01\Lab_01\.h\filial.h"
+#include "C:\Users\user\source\repos\pnayavu-labs\.h\filial.h"
 #include <iostream>
 
 Filial::Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity)

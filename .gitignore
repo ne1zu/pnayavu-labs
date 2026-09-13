@@ -38,7 +38,7 @@
 *.exe
 *.out
 *.app
-
+*.user
 # Build directories
 build/
 Build/

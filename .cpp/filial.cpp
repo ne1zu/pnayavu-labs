@@ -1,120 +1,71 @@
 #include "filial.h"
 #include <iostream>
 
-Filial::Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity)
-    : name(name), address(address),
-    doctors(new Doctor* [doctorCapacity] {nullptr}), doctorCount(0), doctorCapacity(doctorCapacity),
-    services(new Service* [serviceCapacity] {nullptr}), serviceCount(0), serviceCapacity(serviceCapacity)
+Filial::Filial(std::string_view name, std::string_view address, size_t docCap, size_t servCap)
+    : name(name), address(address), doctorCapacity(docCap), serviceCapacity(servCap)
 {
 }
 
-Filial::Filial(const Filial& other)
-    : name(other.name), address(other.address),
-    doctors(new Doctor* [other.doctorCapacity] {nullptr}), doctorCount(other.doctorCount), doctorCapacity(other.doctorCapacity),
-    services(new Service* [other.serviceCapacity] {nullptr}), serviceCount(other.serviceCount), serviceCapacity(other.serviceCapacity)
-{
-    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) {
-        doctors[i] = other.doctors[i];
-    }
-    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) {
-        services[i] = other.services[i];
-    }
-}
+void Filial::setName(std::string_view newName) { name = newName; }
+void Filial::setAddress(std::string_view newAddress) { address = newAddress; }
 
-Filial& Filial::operator=(const Filial& other) {
-    if (this == &other) return *this;
-
-    delete[] doctors;
-    delete[] services;
-
-    name = other.name;
-    address = other.address;
-    doctorCount = other.doctorCount;
-    doctorCapacity = other.doctorCapacity;
-    serviceCount = other.serviceCount;
-    serviceCapacity = other.serviceCapacity;
-
-    doctors = new Doctor * [doctorCapacity] {nullptr};
-    for (int i = 0; i < doctorCount && i < doctorCapacity; i++) {
-        doctors[i] = other.doctors[i];
-    }
-
-    services = new Service * [serviceCapacity] {nullptr};
-    for (int i = 0; i < serviceCount && i < serviceCapacity; i++) {
-        services[i] = other.services[i];
-    }
-
-    return *this;
-}
-
-Filial::~Filial() {
-    delete[] doctors;
-    delete[] services;
-}
-
-void Filial::setName(const std::string& newName) { name = newName; }
-void Filial::setAddress(const std::string& newAddress) { address = newAddress; }
-
-bool Filial::addDoctor(Doctor* doctor) {
-    if (doctorCount >= doctorCapacity) {
-
+bool Filial::addDoctor(std::shared_ptr<Doctor> doctor) {
+    if (doctors.size() >= doctorCapacity) {
         std::cout << "[ERROR] Filial \"" << name << "\" is full. Cannot add doctor.\n";
         return false;
-    }    for (int i = 0; i < doctorCount; i++) {
-        if (doctors[i]->getId() == doctor->getId()) {
+    }
+    for (const auto& doc : doctors) {
+        if (doc->getId() == doctor->getId()) {
             std::cout << " Doctor is already assigned to this filial.\n";
             return false;
         }
     }
-
-    doctors[doctorCount] = doctor;
-    doctorCount++;
+    doctors.push_back(doctor); 
     std::cout << " Doctor " << doctor->getFio() << " assigned to filial \"" << name << "\".\n";
     return true;
 }
 
-bool Filial::addService(Service* service) {
-    if (serviceCount >= serviceCapacity) {
+bool Filial::addService(std::shared_ptr<Service> service) {
+    if (services.size() >= serviceCapacity) {
         std::cout << " Filial \"" << name << "\" cannot offer more services.\n";
         return false;
     }
-    for (int i = 0; i < serviceCount; i++) {
-        if (services[i]->getId() == service->getId()) {
+    for (const auto& srv : services) {
+        if (srv->getId() == service->getId()) {
             std::cout << " Service is already available in this filial.\n";
             return false;
         }
     }
-    services[serviceCount] = service;
-    serviceCount++;
+    services.push_back(service);
     std::cout << " Service \"" << service->getName() << "\" added to filial.\n";
     return true;
 }
 
 bool Filial::isServiceAvailable(int serviceId) const {
-    for (int i = 0; i < serviceCount; i++) {
-        if (services[i]->getId() == serviceId) return true;
+    for (const auto& srv : services) {
+        if (srv->getId() == serviceId) return true;
     }
     return false;
 }
 
 std::string Filial::getName() const { return name; }
 std::string Filial::getAddress() const { return address; }
-int Filial::getDoctorCount() const { return doctorCount; }
-int Filial::getServiceCount() const { return serviceCount; }
+int Filial::getDoctorCount() const { return doctors.size(); } 
+int Filial::getServiceCount() const { return services.size(); }
 
 void Filial::printInfo() const {
-    std::cout << "\n=== FILIAL: " << name << " ===\n";
-    std::cout << "Address: " << address << "\n";
+    std::cout << "\n=== FILIAL: " << name << " ===\n"
+        << "Address: " << address << "\n";
 
-    std::cout << "Doctors (" << doctorCount << "/" << doctorCapacity << "):\n";
-    if (doctorCount == 0) std::cout << "  (Empty)\n";
-    for (int i = 0; i < doctorCount; i++) {
-        std::cout << "  - " << doctors[i]->getFio() << " (" << doctors[i]->getSpecialty() << ")\n";
+    std::cout << "Doctors (" << doctors.size() << "/" << doctorCapacity << "):\n";
+    if (doctors.empty()) std::cout << "  (Empty)\n";
+    for (const auto& doc : doctors) {
+        std::cout << "  - " << doc->getFio() << " (" << doc->getSpecialty() << ")\n";
     }
 
-    std::cout << "Services (" << serviceCount << "/" << serviceCapacity << "):\n";
-    if (serviceCount == 0) std::cout << "  (Empty)\n";
-    for (int i = 0; i < serviceCount; i++) {
-        std::cout << "  - " << services[i]->getName() << " (" << services[i]->getPrice() << " USD)\n";
+    std::cout << "Services (" << services.size() << "/" << serviceCapacity << "):\n";
+    if (services.empty()) std::cout << "  (Empty)\n";
+    for (const auto& srv : services) {
+        std::cout << "  - " << srv->getName() << " (" << srv->getPrice() << " USD)\n";
     }
 }

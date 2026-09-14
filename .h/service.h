@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <string_view> 
 
 class Service {
 private:
@@ -11,14 +12,14 @@ private:
     static int counter;
 
 public:
-    Service(const std::string& name, float price, int length);
+    Service(std::string_view name, float price, int length);
 
     int getId() const;
     std::string getName() const;
     float getPrice() const;
     int getLength() const;
 
-    void setName(const std::string& nameValue);
+    void setName(std::string_view nameValue);
     void setPrice(float priceValue);
     void setLength(int lengthValue);
 

@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <string_view>
+#include <vector>
+#include <memory> 
 #include "doctor.h"
 #include "service.h"
 
@@ -7,24 +10,16 @@ class Filial {
 private:
     std::string name;
     std::string address;
+    std::vector<std::shared_ptr<Doctor>> doctors;
+    std::vector<std::shared_ptr<Service>> services;
 
-    Doctor** doctors;
-    int doctorCount;
     int doctorCapacity;
-
-    Service** services;
-    int serviceCount;
     int serviceCapacity;
 
 public:
-    Filial(const std::string& name, const std::string& address, int doctorCapacity, int serviceCapacity);
-    ~Filial();
-
-    Filial(const Filial& other);
-    Filial& operator=(const Filial& other);
-
-    bool addDoctor(Doctor* doctor);
-    bool addService(Service* service);
+    Filial(std::string_view name, std::string_view address, size_t doctorCapacity, size_t serviceCapacity);
+    bool addDoctor(std::shared_ptr<Doctor> doctor);
+    bool addService(std::shared_ptr<Service> service);
     bool isServiceAvailable(int serviceId) const;
 
     std::string getName() const;
@@ -32,8 +27,8 @@ public:
     int getDoctorCount() const;
     int getServiceCount() const;
 
-    void setName(const std::string& nameValue);
-    void setAddress(const std::string& addressValue);
+    void setName(std::string_view nameValue);
+    void setAddress(std::string_view addressValue);
 
     void printInfo() const;
 };

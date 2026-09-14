@@ -23,7 +23,6 @@
 *.dll
 *.so.*
 
-
 # Fortran module files
 *.mod
 *.smod
@@ -39,10 +38,14 @@
 *.out
 *.app
 *.user
+
 # Build directories
 build/
 Build/
 build-*/
+x64/
+Debug/
+Release/
 
 # CMake generated files
 CMakeFiles/
@@ -67,11 +70,11 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
-/.vs
-/Lab_01/.vs/Lab_01
-/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.write.1.tlog
-/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.read.1.tlog
-/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.command.1.tlog
-/Lab_01/Lab_01/x64/Debug/vc143.idb
-/Lab_01/x64/Debug
-/Lab_01.vcxproj
+
+.vs/
+*.sln
+*.suo
+*.user
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

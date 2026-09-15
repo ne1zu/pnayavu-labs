@@ -70,6 +70,15 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+/.vs
+/Lab_01/.vs/Lab_01
+/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.write.1.tlog
+/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.read.1.tlog
+/Lab_01/Lab_01/x64/Debug/Lab_01.tlog/CL.command.1.tlog
+/Lab_01/Lab_01/x64/Debug/vc143.idb
+/Lab_01/x64/Debug
+/Lab_01.vcxproj
+/Lab01
 
 .vs/
 *.sln

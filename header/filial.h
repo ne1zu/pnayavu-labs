@@ -17,7 +17,7 @@ private:
     int serviceCapacity;
 
 public:
-    Filial(std::string_view name, std::string_view address, size_t doctorCapacity, size_t serviceCapacity);
+    Filial(std::string_view name, std::string_view address, int doctorCapacity, int serviceCapacity);
     bool addDoctor(std::shared_ptr<Doctor> doctor);
     bool addService(std::shared_ptr<Service> service);
     bool isServiceAvailable(int serviceId) const;

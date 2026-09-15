@@ -1,7 +1,7 @@
 #include "filial.h"
 #include <iostream>
 
-Filial::Filial(std::string_view name, std::string_view address, size_t docCap, size_t servCap)
+Filial::Filial(std::string_view name, std::string_view address, int docCap, int servCap)
     : name(name), address(address), doctorCapacity(docCap), serviceCapacity(servCap)
 {
 }

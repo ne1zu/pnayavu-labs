@@ -6,47 +6,47 @@
 #include "doctor.h"
 #include "filial.h"
 
-void static printAllDoctors(const std::vector<std::shared_ptr<Doctor>>& doctorList) {
+void printAllDoctors(const std::vector<std::shared_ptr<Doctor>>& doctorList) {
     if (doctorList.empty()) { 
         std::cout << "(Database is empty)\n"; 
         return; 
     }
-    for (int index = 0; index < static_cast<int>(doctorList.size()); index++) {
+    for (int index = 0; index < doctorList.size(); index++) {
         std::cout << index + 1 << ". " << doctorList[index]->getFio() 
                   << " (" << doctorList[index]->getSpecialty() << ", " 
                   << doctorList[index]->getExperience() << " Years)\n";
     }
 }
 
-void static printAllServices(const std::vector<std::shared_ptr<Service>>& serviceList) {
+void  printAllServices(const std::vector<std::shared_ptr<Service>>& serviceList) {
     if (serviceList.empty()) { 
         std::cout << "(Database is empty)\n"; 
         return; 
     }
-    for (int index = 0; index < static_cast<int>(serviceList.size()); index++) {
+    for (int index = 0; index <serviceList.size(); index++) {
         std::cout << index + 1 << ". " << serviceList[index]->getName() 
                   << " (" << serviceList[index]->getPrice() << " USD, " 
                   << serviceList[index]->getLength() << " min)\n";
     }
 }
 
-void static printAllFilials(const std::vector<std::shared_ptr<Filial>>& filialList) {
+void  printAllFilials(const std::vector<std::shared_ptr<Filial>>& filialList) {
     if (filialList.empty()) { 
         std::cout << "(Database is empty)\n"; 
         return; 
     }
-    for (int index = 0; index < static_cast<int>(filialList.size()); index++) {
+    for (int index = 0; index < filialList.size(); index++) {
         std::cout << index + 1 << ". " << filialList[index]->getName() << "\n";
     }
 }
-void static handleEditService(const std::vector<std::shared_ptr<Service>>& serviceList) {
+void  handleEditService(const std::vector<std::shared_ptr<Service>>& serviceList) {
     std::cout << "Select Service to edit:\n";
     printAllServices(serviceList);
     
     int selectedIndex; 
     std::cin >> selectedIndex; 
     selectedIndex--; 
-    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(serviceList.size())) {
+    if (selectedIndex >= 0 && selectedIndex < serviceList.size()) {
         std::shared_ptr<Service> currentService = serviceList[selectedIndex];
         currentService->printInfo();
         
@@ -97,7 +97,7 @@ void static handleEditService(const std::vector<std::shared_ptr<Service>>& servi
     }
 }
 
-void static handleEditDoctor(const std::vector<std::shared_ptr<Doctor>>& doctorList) {
+void  handleEditDoctor(const std::vector<std::shared_ptr<Doctor>>& doctorList) {
     std::cout << "Select Doctor to edit:\n";
     printAllDoctors(doctorList);
     
@@ -105,7 +105,7 @@ void static handleEditDoctor(const std::vector<std::shared_ptr<Doctor>>& doctorL
     std::cin >> selectedIndex; 
     selectedIndex--;
 
-    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(doctorList.size())) {
+    if (selectedIndex >= 0 && selectedIndex < doctorList.size()) {
         std::shared_ptr<Doctor> currentDoctor = doctorList[selectedIndex];
         currentDoctor->printInfo();
         
@@ -156,7 +156,7 @@ void static handleEditDoctor(const std::vector<std::shared_ptr<Doctor>>& doctorL
     }
 }
 
-void static handleEditBranch(const std::vector<std::shared_ptr<Filial>>& filialList) {
+void  handleEditBranch(const std::vector<std::shared_ptr<Filial>>& filialList) {
     std::cout << "Select Branch to edit:\n";
     printAllFilials(filialList);
     

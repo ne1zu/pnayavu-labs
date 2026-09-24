@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <iostream>
 
 class Doctor {
 private:
@@ -12,7 +13,7 @@ private:
     static int counter;
 
 public:
-    Doctor(std::string_view fio, std::string_view specialty, int experience);
+    Doctor(std::string_view fio = "", std::string_view specialty = "", int experience = 0);
 
     int getId() const;
     std::string getFio() const;
@@ -23,5 +24,11 @@ public:
     void setSpecialty(std::string_view specialtyValue);
     void setExperience(int experience);
 
-    void printInfo() const;
+    bool operator==(const Doctor& other) const;
+
+    bool operator<(const Doctor& other) const;
+    bool operator>(const Doctor& other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Doctor& doc);
+    friend std::istream& operator>>(std::istream& is, Doctor& doc);
 };

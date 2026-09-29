@@ -8,6 +8,7 @@
 ##  Структура репозитория
 
 * `Lab_01/` - Классы и объекты
+*  `Lab_02/` - Дружественные функции и перегрузка операторов
 
 Ссыла на SonarCloud - https://sonarcloud.io/summary/new_code?id=ne1zu_pnayavu-labs&branch=main
 

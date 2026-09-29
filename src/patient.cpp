@@ -24,7 +24,7 @@ void Patient::setPhone(std::string_view phoneValue) { phone = phoneValue; }
 
 bool Patient::isAdult() const { return age >= 18; }
 
-bool Patient::operator==(const Patient& other) const { return id == other.id; }
+bool Patient::operator==(const Patient& other) const { return phone == other.phone; }
 
 bool Patient::operator<(const Patient& other) const { return age < other.age; }
 bool Patient::operator>(const Patient& other) const { return age > other.age; }

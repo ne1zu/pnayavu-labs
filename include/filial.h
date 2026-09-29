@@ -8,8 +8,10 @@
 #include "service.h"
 #include "patient.h"
 
+#define  MEMBERSIZE  10
 class Filial {
 private:
+
     std::string name;
     std::string address;
 
@@ -17,13 +19,13 @@ private:
     std::vector<std::shared_ptr<Service>> services;
     std::vector<std::shared_ptr<Patient>> patients;
 
-    size_t doctorCapacity;
-    size_t serviceCapacity;
-    size_t patientCapacity;
+    int doctorCapacity;
+    int serviceCapacity;
+    int patientCapacity;
 
 public:
     Filial(std::string_view name = "", std::string_view address = "",
-        size_t doctorCapacity = 10, size_t serviceCapacity = 10, size_t patientCapacity = 10);
+        int doctorCapacity = MEMBERSIZE, int serviceCapacity = MEMBERSIZE, int patientCapacity = MEMBERSIZE);
 
     std::string getName() const;
     std::string getAddress() const;
@@ -44,7 +46,18 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Filial& filial);
 
+private:
    
+    bool hasSpaceForDoctor() const;
+    bool hasSpaceForService() const;
+    bool hasSpaceForPatient() const;
+    bool hasAnyDoctor() const;
+
+    int indexOfDoctor(const std::shared_ptr<Doctor>& doctor) const;
+    int indexOfService(const std::shared_ptr<Service>& service) const;
+    int indexOfPatient(const std::shared_ptr<Patient>& patient) const;
+
+    
     friend bool isServiceAvailable(const Filial& filial, const Service& service);
     friend std::shared_ptr<Doctor> findDoctorBySpecialty(const Filial& filial, std::string_view specialty);
 };

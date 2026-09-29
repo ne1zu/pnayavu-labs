@@ -28,7 +28,7 @@ void Service::setLength(int lengthValue) {
     length = lengthValue;
 }
 
-bool Service::operator==(const Service& other) const { return id == other.id; }
+bool Service::operator==(const Service& other) const { return name == other.name; }
 
 bool Service::operator<(const Service& other) const { return price < other.price; }
 bool Service::operator>(const Service& other) const { return price > other.price; }

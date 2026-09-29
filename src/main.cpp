@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
@@ -31,29 +31,6 @@ void printAllFilials(const vector<shared_ptr<Filial>>& filialList) {
         cout << i + 1 << ". " << filialList[i]->getName() << " (" << filialList[i]->getAddress() << ")\n";
 }
 
-
-shared_ptr<Patient> findExistingPatient(const vector<shared_ptr<Patient>>& list, const Patient& candidate) {
-    int count = list.size();
-    for (int i = 0; i < count; i++) {
-        if (*list[i] == candidate) return list[i];
-    }
-    return nullptr;
-}
-shared_ptr<Doctor> findExistingDoctor(const vector<shared_ptr<Doctor>>& list, const Doctor& candidate) {
-    int count = list.size();
-    for (int i = 0; i < count; i++) {
-        if (*list[i] == candidate) return list[i];
-    }
-    return nullptr;
-}
-shared_ptr<Service> findExistingService(const vector<shared_ptr<Service>>& list, const Service& candidate) {
-    int count = list.size();
-    for (int i = 0; i < count; i++) {
-        if (*list[i] == candidate) return list[i];
-    }
-    return nullptr;
-}
-
 void interactiveCompare(const vector<shared_ptr<Doctor>>& doctors,
     const vector<shared_ptr<Service>>& services,
     const vector<shared_ptr<Patient>>& patients) {
@@ -82,6 +59,9 @@ void interactiveCompare(const vector<shared_ptr<Doctor>>& doctors,
             auto d2 = doctors[idx2];
             cout << "\n[RESULT] Comparing " << d1->getFio() << " and " << d2->getFio() << ":\n";
 
+            // Equality is by full name now, not by internal id, so this also
+            // catches two different records that turned out to be the same
+            // doctor entered twice — not just "you picked the same index".
             if (*d1 == *d2) {
                 cout << "-> DUPLICATE RECORD: these are the same doctor (same name), entered separately!\n";
             }
@@ -111,6 +91,8 @@ void interactiveCompare(const vector<shared_ptr<Doctor>>& doctors,
             auto s2 = services[idx2];
             cout << "\n[RESULT] Comparing '" << s1->getName() << "' and '" << s2->getName() << "':\n";
 
+            // Equality is by service name now, so this catches the same
+            // offering registered twice under separate records.
             if (*s1 == *s2) {
                 cout << "-> DUPLICATE RECORD: this service is registered twice under the same name.\n";
             }
@@ -140,6 +122,8 @@ void interactiveCompare(const vector<shared_ptr<Doctor>>& doctors,
             auto p2 = patients[idx2];
             cout << "\n[RESULT] Comparing " << p1->getFio() << " and " << p2->getFio() << ":\n";
 
+            // Equality is by phone now, so this catches the same person
+            // accidentally re-registered as a second patient record.
             if (*p1 == *p2) {
                 cout << "-> DUPLICATE RECORD: same phone number, this is the same patient entered twice!\n";
             }
@@ -219,46 +203,9 @@ int main() {
         case 5: {
             cout << "What to create?\n1. Patient\n2. Doctor\n3. Service\nChoice: ";
             int sub; cin >> sub;
-
-            if (sub == 1) {
-                Patient p;
-                cin >> p;
-                auto existing = findExistingPatient(globalPatients, p);
-                if (existing) {
-                    cout << "-> Already registered: " << *existing
-                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
-                }
-                else {
-                    globalPatients.push_back(make_shared<Patient>(p));
-                    cout << "Success! New patient registered.\n";
-                }
-            }
-            else if (sub == 2) {
-                Doctor d;
-                cin >> d;
-                auto existing = findExistingDoctor(globalDoctors, d);
-                if (existing) {
-                    cout << "-> Already registered: " << *existing
-                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
-                }
-                else {
-                    globalDoctors.push_back(make_shared<Doctor>(d));
-                    cout << "Success! New doctor registered.\n";
-                }
-            }
-            else if (sub == 3) {
-                Service s;
-                cin >> s;
-                auto existing = findExistingService(globalServices, s);
-                if (existing) {
-                    cout << "-> Already registered: " << *existing
-                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
-                }
-                else {
-                    globalServices.push_back(make_shared<Service>(s));
-                    cout << "Success! New service registered.\n";
-                }
-            }
+            if (sub == 1) { auto p = make_shared<Patient>(); cin >> *p; globalPatients.push_back(p); cout << "Success!\n"; }
+            else if (sub == 2) { auto d = make_shared<Doctor>(); cin >> *d; globalDoctors.push_back(d); cout << "Success!\n"; }
+            else if (sub == 3) { auto s = make_shared<Service>(); cin >> *s; globalServices.push_back(s); cout << "Success!\n"; }
             break;
         }
         case 6: {
@@ -415,8 +362,7 @@ int main() {
             auto found = findDoctorBySpecialty(*globalFilials[bIdx], specialty);
             if (found) {
                 cout << "-> Found: " << *found << "\n";
-            }
-            else {
+            } else {
                 cout << "-> No doctor with specialty \"" << specialty
                     << "\" at \"" << globalFilials[bIdx]->getName() << "\".\n";
             }

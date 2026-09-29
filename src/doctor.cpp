@@ -22,7 +22,7 @@ void Doctor::setExperience(int expValue) {
     experience = expValue;
 }
 
-bool Doctor::operator==(const Doctor& other) const { return id == other.id; }
+bool Doctor::operator==(const Doctor& other) const { return fio == other.fio; }
 
 bool Doctor::operator<(const Doctor& other) const { return experience < other.experience; }
 bool Doctor::operator>(const Doctor& other) const { return experience > other.experience; }

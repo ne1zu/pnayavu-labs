@@ -3,16 +3,14 @@
 int Patient::counter = 0;
 
 Patient::Patient(std::string_view fio, int age, std::string_view phone)
-    : fio(fio), age(age), phone(phone) {
-    id = counter++;
+    : ClinicRecord(fio, counter), age(age), phone(phone) {
 }
 
-int Patient::getId() const { return id; }
-std::string Patient::getFio() const { return fio; }
+std::string Patient::getFio() const { return getName(); }
 int Patient::getAge() const { return age; }
 std::string Patient::getPhone() const { return phone; }
 
-void Patient::setFio(std::string_view fioValue) { fio = fioValue; }
+void Patient::setFio(std::string_view fioValue) { setName(fioValue); }
 void Patient::setAge(int ageValue) {
     if (ageValue < 0) {
         std::cout << " Age cannot be negative!\n";
@@ -25,19 +23,27 @@ void Patient::setPhone(std::string_view phoneValue) { phone = phoneValue; }
 bool Patient::isAdult() const { return age >= 18; }
 
 bool Patient::operator==(const Patient& other) const { return phone == other.phone; }
-
 bool Patient::operator<(const Patient& other) const { return age < other.age; }
 bool Patient::operator>(const Patient& other) const { return age > other.age; }
 
-std::ostream& operator<<(std::ostream& os, const Patient& patient) {
-    os << "Patient #" << patient.id << " | Name: " << patient.fio
-        << " | Age: " << patient.age << " | Phone: " << patient.phone;
-    return os;
+std::string Patient::getEntityType() const { return "Patient"; }
+
+void Patient::printInfo(std::ostream& os) const {
+    os << getEntityType() << " ";
+    ClinicRecord::printInfo(os);
+    os << " | Age: " << age << " | Phone: " << phone;
+}
+
+std::string Patient::classify() const {
+    return isAdult() ? "Adult" : "Minor";
 }
 
 std::istream& operator>>(std::istream& is, Patient& patient) {
+    std::string fioValue;
     std::cout << "Enter Patient Name: ";
-    std::getline(is >> std::ws, patient.fio);
+    std::getline(is >> std::ws, fioValue);
+    patient.setFio(fioValue);
+
     std::cout << "Enter Patient Age: ";
     is >> patient.age;
     if (patient.age < 0) {

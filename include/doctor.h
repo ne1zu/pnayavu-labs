@@ -2,11 +2,10 @@
 #include <string>
 #include <string_view>
 #include <iostream>
+#include "clinic_record.h"
 
-class Doctor {
+class Doctor : public ClinicRecord {
 private:
-    int id;
-    std::string fio;
     std::string specialty;
     int experience;
 
@@ -15,20 +14,22 @@ private:
 public:
     Doctor(std::string_view fio = "", std::string_view specialty = "", int experience = 0);
 
-    int getId() const;
     std::string getFio() const;
     std::string getSpecialty() const;
     int getExperience() const;
 
     void setFio(std::string_view fioValue);
     void setSpecialty(std::string_view specialtyValue);
-    void setExperience(int experience);
+    void setExperience(int expValue);
 
     bool operator==(const Doctor& other) const;
-
     bool operator<(const Doctor& other) const;
     bool operator>(const Doctor& other) const;
 
-    friend std::ostream& operator<<(std::ostream& os, const Doctor& doc);
+    
+    std::string getEntityType() const override;
+    void printInfo(std::ostream& os) const override;
+    std::string classify() const override;
+
     friend std::istream& operator>>(std::istream& is, Doctor& doc);
 };

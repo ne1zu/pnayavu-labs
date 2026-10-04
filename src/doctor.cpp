@@ -3,16 +3,14 @@
 int Doctor::counter = 0;
 
 Doctor::Doctor(std::string_view fio, std::string_view specialty, int experience)
-    : fio(fio), specialty(specialty), experience(experience) {
-    id = counter++;
+    : ClinicRecord(fio, counter), specialty(specialty), experience(experience) {
 }
 
-int Doctor::getId() const { return id; }
-std::string Doctor::getFio() const { return fio; }
+std::string Doctor::getFio() const { return getName(); }
 std::string Doctor::getSpecialty() const { return specialty; }
 int Doctor::getExperience() const { return experience; }
 
-void Doctor::setFio(std::string_view fioValue) { fio = fioValue; }
+void Doctor::setFio(std::string_view fioValue) { setName(fioValue); }
 void Doctor::setSpecialty(std::string_view specialtyValue) { specialty = specialtyValue; }
 void Doctor::setExperience(int expValue) {
     if (expValue < 0) {
@@ -22,20 +20,29 @@ void Doctor::setExperience(int expValue) {
     experience = expValue;
 }
 
-bool Doctor::operator==(const Doctor& other) const { return fio == other.fio; }
-
+bool Doctor::operator==(const Doctor& other) const { return name == other.name; }
 bool Doctor::operator<(const Doctor& other) const { return experience < other.experience; }
 bool Doctor::operator>(const Doctor& other) const { return experience > other.experience; }
 
-std::ostream& operator<<(std::ostream& os, const Doctor& doc) {
-    os << "Doctor #" << doc.id << " | Name: " << doc.fio
-        << " | Specialty: " << doc.specialty << " | Experience: " << doc.experience << " years";
-    return os;
+std::string Doctor::getEntityType() const { return "Doctor"; }
+
+void Doctor::printInfo(std::ostream& os) const {
+    os << getEntityType() << " ";
+    ClinicRecord::printInfo(os);
+    os << " | Specialty: " << specialty << " | Experience: " << experience << " years";
+}
+
+std::string Doctor::classify() const {
+    if (experience >= 10) return "Senior";
+    if (experience >= 5) return "Mid-level";
+    return "Junior";
 }
 
 std::istream& operator>>(std::istream& is, Doctor& doc) {
+    std::string fioValue;
     std::cout << "Enter Doctor Name: ";
-    std::getline(is >> std::ws, doc.fio);
+    std::getline(is >> std::ws, fioValue);
+    doc.setFio(fioValue);
 
     std::cout << "Enter Specialty: ";
     std::getline(is >> std::ws, doc.specialty);

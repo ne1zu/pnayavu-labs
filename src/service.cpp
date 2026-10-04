@@ -3,16 +3,12 @@
 int Service::counter = 0;
 
 Service::Service(std::string_view name, float price, int length)
-    : name(name), price(price), length(length) {
-    id = counter++;
+    : ClinicRecord(name, counter), price(price), length(length) {
 }
 
-int Service::getId() const { return id; }
-std::string Service::getName() const { return name; }
 float Service::getPrice() const { return price; }
 int Service::getLength() const { return length; }
 
-void Service::setName(std::string_view nameValue) { name = nameValue; }
 void Service::setPrice(float priceValue) {
     if (priceValue < 0) {
         std::cout << "[ERROR] Price cannot be negative.\n";
@@ -29,19 +25,26 @@ void Service::setLength(int lengthValue) {
 }
 
 bool Service::operator==(const Service& other) const { return name == other.name; }
-
 bool Service::operator<(const Service& other) const { return price < other.price; }
 bool Service::operator>(const Service& other) const { return price > other.price; }
 
-std::ostream& operator<<(std::ostream& os, const Service& srv) {
-    os << "Service #" << srv.id << " | Name: " << srv.name
-        << " | Price: " << srv.price << "$ | Duration: " << srv.length << " min";
-    return os;
+std::string Service::getEntityType() const { return "Service"; }
+
+void Service::printInfo(std::ostream& os) const {
+    os << getEntityType() << " ";
+    ClinicRecord::printInfo(os);
+    os << " | Price: " << price << "$ | Duration: " << length << " min";
+}
+
+std::string Service::classify() const {
+    return price >= 40.0f ? "Premium" : "Standard";
 }
 
 std::istream& operator>>(std::istream& is, Service& srv) {
+    std::string nameValue;
     std::cout << "Enter Service Name: ";
-    std::getline(is >> std::ws, srv.name);
+    std::getline(is >> std::ws, nameValue);
+    srv.setName(nameValue);
 
     std::cout << "Enter Price ($): ";
     is >> srv.price;

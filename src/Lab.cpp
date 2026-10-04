@@ -6,23 +6,27 @@
 #include "doctor.h"
 #include "patient.h"
 #include "filial.h"
+#include "clinic_record.h"
 
 using namespace std;
 
 void printAllDoctors(const vector<shared_ptr<Doctor>>& doctorList) {
     if (doctorList.empty()) { cout << "(Database is empty)\n"; return; }
     int count = doctorList.size();
-    for (int i = 0; i < count; i++) cout << i + 1 << ". " << *doctorList[i] << "\n";
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *doctorList[i] << " [" << doctorList[i]->classify() << "]\n";
 }
 void printAllServices(const vector<shared_ptr<Service>>& serviceList) {
     if (serviceList.empty()) { cout << "(Database is empty)\n"; return; }
     int count = serviceList.size();
-    for (int i = 0; i < count; i++) cout << i + 1 << ". " << *serviceList[i] << "\n";
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *serviceList[i] << " [" << serviceList[i]->classify() << "]\n";
 }
 void printAllPatients(const vector<shared_ptr<Patient>>& patientList) {
     if (patientList.empty()) { cout << "(Database is empty)\n"; return; }
     int count = patientList.size();
-    for (int i = 0; i < count; i++) cout << i + 1 << ". " << *patientList[i] << "\n";
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *patientList[i] << " [" << patientList[i]->classify() << "]\n";
 }
 void printAllFilials(const vector<shared_ptr<Filial>>& filialList) {
     if (filialList.empty()) { cout << "(Database is empty)\n"; return; }
@@ -199,6 +203,8 @@ int main() {
         cout << "-------------------------------------------\n";
         cout << "10. Check Service availability at a Branch (friend function)\n";
         cout << "11. Find a Doctor by specialty at a Branch (friend function)\n";
+        cout << "-------------------------------------------\n";
+        cout << "12. Polymorphic Overview of a Branch (base-class pointers)\n";
         cout << "0. Exit\n";
         cout << "Select an option: ";
         cin >> mainChoice;
@@ -419,6 +425,25 @@ int main() {
             else {
                 cout << "-> No doctor with specialty \"" << specialty
                     << "\" at \"" << globalFilials[bIdx]->getName() << "\".\n";
+            }
+            break;
+        }
+
+        case 12: {
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+
+            vector<shared_ptr<ClinicRecord>> all = globalFilials[bIdx]->getAllEntities();
+            if (all.empty()) { cout << "(This branch has nothing assigned yet)\n"; break; }
+
+            cout << "\n--- Polymorphic overview of \"" << globalFilials[bIdx]->getName() << "\" ---\n";
+            cout << "(identical loop body for every entry — output differs by actual type)\n";
+            for (const auto& entity : all) {
+                cout << "[" << entity->getEntityType() << "] " << *entity
+                    << " -> " << entity->classify() << "\n";
             }
             break;
         }

@@ -2,11 +2,10 @@
 #include <string>
 #include <string_view>
 #include <iostream>
+#include "clinic_record.h"
 
-class Patient {
+class Patient : public ClinicRecord {
 private:
-    int id;
-    std::string fio;
     int age;
     std::string phone;
 
@@ -15,7 +14,6 @@ private:
 public:
     Patient(std::string_view fio = "", int age = 0, std::string_view phone = "");
 
-    int getId() const;
     std::string getFio() const;
     int getAge() const;
     std::string getPhone() const;
@@ -27,10 +25,13 @@ public:
     bool isAdult() const;
 
     bool operator==(const Patient& other) const;
-
     bool operator<(const Patient& other) const;
     bool operator>(const Patient& other) const;
 
-    friend std::ostream& operator<<(std::ostream& os, const Patient& patient);
+    
+    std::string getEntityType() const override;
+    void printInfo(std::ostream& os) const override;
+    std::string classify() const override;
+
     friend std::istream& operator>>(std::istream& is, Patient& patient);
 };

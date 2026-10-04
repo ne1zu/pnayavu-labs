@@ -7,6 +7,7 @@
 #include "doctor.h"
 #include "service.h"
 #include "patient.h"
+#include "clinic_record.h"
 
 #define  MEMBERSIZE  10
 class Filial {
@@ -44,10 +45,13 @@ public:
     Filial& operator-=(std::shared_ptr<Service> service);
     Filial& operator-=(std::shared_ptr<Patient> patient);
 
+    
+    std::vector<std::shared_ptr<ClinicRecord>> getAllEntities() const;
+
     friend std::ostream& operator<<(std::ostream& os, const Filial& filial);
 
 private:
-   
+    
     bool hasSpaceForDoctor() const;
     bool hasSpaceForService() const;
     bool hasSpaceForPatient() const;

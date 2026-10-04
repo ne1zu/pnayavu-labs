@@ -2,30 +2,30 @@
 
 
     void printCapacityError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "ERROR " << objectType << " capacity reached for filial \"" << filialName << "\"!\n";
+        std::cout << "[ERROR] " << objectType << " capacity reached for filial \"" << filialName << "\"!\n";
     }
 
     void printNotFoundError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "ERROR " << objectType << " not found in filial \"" << filialName << "\"!\n";
+        std::cout << "[ERROR] " << objectType << " not found in filial \"" << filialName << "\"!\n";
     }
 
     void printDuplicateError(const std::string& filialName, const std::string& objectType) {
-        std::cout << " This " << objectType << " is already assigned to filial \"" << filialName << "\"!\n";
+        std::cout << "[ERROR] This " << objectType << " is already assigned to filial \"" << filialName << "\"!\n";
     }
 
     void printNullObjectError(const std::string& filialName, const std::string& objectType) {
-        std::cout << " Cannot add an empty " << objectType << " reference to filial \"" << filialName << "\"!\n";
+        std::cout << "[ERROR] Cannot add an empty " << objectType << " reference to filial \"" << filialName << "\"!\n";
     }
 
     void printNoDoctorsError(const std::string& filialName) {
-        std::cout << "Cannot add a Patient to filial \"" << filialName << "\" — no doctors are assigned there yet!\n";
+        std::cout << "[ERROR] Cannot add a Patient to filial \"" << filialName << "\" — no doctors are assigned there yet!\n";
     }
 
 
 Filial::Filial(std::string_view name, std::string_view address,
     int doctorCapacity, int serviceCapacity, int patientCapacity)
     : name(name), address(address),
-    doctorCapacity(doctorCapacity), serviceCapacity(serviceCapacity), patientCapacity(patientCapacity) {
+      doctorCapacity(doctorCapacity), serviceCapacity(serviceCapacity), patientCapacity(patientCapacity) {
 }
 
 std::string Filial::getName() const { return name; }
@@ -46,6 +46,7 @@ int Filial::getPatientCount() const {
 
 void Filial::setName(std::string_view nameValue) { name = nameValue; }
 void Filial::setAddress(std::string_view addressValue) { address = addressValue; }
+
 
 bool Filial::hasSpaceForDoctor() const {
     int count = doctors.size();
@@ -86,18 +87,17 @@ int Filial::indexOfPatient(const std::shared_ptr<Patient>& patient) const {
     }
     return -1;
 }
-
 Filial& Filial::operator+=(std::shared_ptr<Doctor> doctor) {
     if (!doctor) {
-        printNullObjectError(name, "Doctor");
+        printNullObjectError(name, "Doctor");  
         return *this;
     }
     if (indexOfDoctor(doctor) >= 0) {
-        printDuplicateError(name, "Doctor");
+        printDuplicateError(name, doctor->getEntityType());  
         return *this;
     }
     if (!hasSpaceForDoctor()) {
-        printCapacityError(name, "Doctor");
+        printCapacityError(name, doctor->getEntityType());
         return *this;
     }
     doctors.push_back(doctor);
@@ -110,11 +110,11 @@ Filial& Filial::operator+=(std::shared_ptr<Service> service) {
         return *this;
     }
     if (indexOfService(service) >= 0) {
-        printDuplicateError(name, "Service");
+        printDuplicateError(name, service->getEntityType());
         return *this;
     }
     if (!hasSpaceForService()) {
-        printCapacityError(name, "Service");
+        printCapacityError(name, service->getEntityType());
         return *this;
     }
     services.push_back(service);
@@ -131,11 +131,11 @@ Filial& Filial::operator+=(std::shared_ptr<Patient> patient) {
         return *this;
     }
     if (indexOfPatient(patient) >= 0) {
-        printDuplicateError(name, "Patient");
+        printDuplicateError(name, patient->getEntityType());
         return *this;
     }
     if (!hasSpaceForPatient()) {
-        printCapacityError(name, "Patient");
+        printCapacityError(name, patient->getEntityType());
         return *this;
     }
     patients.push_back(patient);
@@ -149,7 +149,7 @@ Filial& Filial::operator-=(std::shared_ptr<Doctor> doctor) {
     }
     int idx = indexOfDoctor(doctor);
     if (idx < 0) {
-        printNotFoundError(name, "Doctor");
+        printNotFoundError(name, doctor->getEntityType());
         return *this;
     }
     doctors.erase(doctors.begin() + idx);
@@ -163,7 +163,7 @@ Filial& Filial::operator-=(std::shared_ptr<Service> service) {
     }
     int idx = indexOfService(service);
     if (idx < 0) {
-        printNotFoundError(name, "Service");
+        printNotFoundError(name, service->getEntityType());
         return *this;
     }
     services.erase(services.begin() + idx);
@@ -177,7 +177,7 @@ Filial& Filial::operator-=(std::shared_ptr<Patient> patient) {
     }
     int idx = indexOfPatient(patient);
     if (idx < 0) {
-        printNotFoundError(name, "Patient");
+        printNotFoundError(name, patient->getEntityType());
         return *this;
     }
     patients.erase(patients.begin() + idx);
@@ -188,16 +188,26 @@ std::ostream& operator<<(std::ostream& os, const Filial& filial) {
     os << "Filial: " << filial.name << " (" << filial.address << ")\n";
 
     os << "  Doctors (" << filial.doctors.size() << "/" << filial.doctorCapacity << "):\n";
-    for (const auto& d : filial.doctors) os << "    " << *d << "\n";
+    for (const auto& d : filial.doctors) os << "    " << *d << " [" << d->classify() << "]\n";
 
     os << "  Services (" << filial.services.size() << "/" << filial.serviceCapacity << "):\n";
-    for (const auto& s : filial.services) os << "    " << *s << "\n";
+    for (const auto& s : filial.services) os << "    " << *s << " [" << s->classify() << "]\n";
 
     os << "  Patients (" << filial.patients.size() << "/" << filial.patientCapacity << "):\n";
-    for (const auto& p : filial.patients) os << "    " << *p << "\n";
+    for (const auto& p : filial.patients) os << "    " << *p << " [" << p->classify() << "]\n";
 
     return os;
 }
+
+
+std::vector<std::shared_ptr<ClinicRecord>> Filial::getAllEntities() const {
+    std::vector<std::shared_ptr<ClinicRecord>> all;
+    for (const auto& d : doctors) all.push_back(d);  
+    for (const auto& s : services) all.push_back(s);
+    for (const auto& p : patients) all.push_back(p);
+    return all;
+}
+
 
 bool isServiceAvailable(const Filial& filial, const Service& service) {
     int count = filial.services.size();

@@ -433,8 +433,8 @@ int main() {
             printAllFilials(globalFilials);
             cout << "Select Branch index: ";
             int bIdx; cin >> bIdx; bIdx--;
-            int filialsCount = globalFilials.size();
-            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+           
+            if (int filialsCount = globalFilials.size(); bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
 
             vector<shared_ptr<ClinicRecord>> all = globalFilials[bIdx]->getAllEntities();
             if (all.empty()) { cout << "(This branch has nothing assigned yet)\n"; break; }

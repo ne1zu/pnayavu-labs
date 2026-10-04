@@ -1,8 +1,7 @@
 #include "clinic_record.h"
 
 ClinicRecord::ClinicRecord(std::string_view name, int& typeCounter)
-    : name(name) {
-    id = typeCounter++;
+    : name(name) ,id(typeCounter++) {
 }
 
 int ClinicRecord::getId() const { return id; }

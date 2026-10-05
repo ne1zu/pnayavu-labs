@@ -3,7 +3,7 @@
 int Patient::counter = 0;
 
 Patient::Patient(std::string_view fio, int age, std::string_view phone)
-    : ClinicRecord(fio, counter), age(age), phone(phone) {
+    : Person(fio, counter), age(age), phone(phone) {
 }
 
 std::string Patient::getFio() const { return getName(); }
@@ -30,7 +30,7 @@ std::string Patient::getEntityType() const { return "Patient"; }
 
 void Patient::printInfo(std::ostream& os) const {
     os << getEntityType() << " ";
-    ClinicRecord::printInfo(os);
+    Person::printInfo(os);
     os << " | Age: " << age << " | Phone: " << phone;
 }
 

@@ -2,9 +2,9 @@
 #include <string>
 #include <string_view>
 #include <iostream>
-#include "clinic_record.h"
+#include "person.h"
 
-class Doctor : public ClinicRecord {
+class Doctor : public Person {
 private:
     std::string specialty;
     int experience;

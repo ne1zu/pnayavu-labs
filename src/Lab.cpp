@@ -11,110 +11,198 @@
 
 using namespace std;
 
-void printAllDoctors(const vector<shared_ptr<Doctor>>& list) {
-    if (list.empty()) { cout << "Empty\n"; return; }
-    for (size_t i = 0; i < list.size(); i++) cout << i + 1 << ". " << *list[i] << "\n";
+void printAllDoctors(const vector<shared_ptr<Doctor>>& doctorList) {
+    if (doctorList.empty()) { cout << "(Database is empty)\n"; return; }
+    int count = doctorList.size();
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *doctorList[i] << " [" << doctorList[i]->classify() << "]\n";
 }
-void printAllServices(const vector<shared_ptr<Service>>& list) {
-    if (list.empty()) { cout << "Empty\n"; return; }
-    for (size_t i = 0; i < list.size(); i++) cout << i + 1 << ". " << *list[i] << "\n";
+void printAllServices(const vector<shared_ptr<Service>>& serviceList) {
+    if (serviceList.empty()) { cout << "(Database is empty)\n"; return; }
+    int count = serviceList.size();
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *serviceList[i] << " [" << serviceList[i]->classify() << "]\n";
 }
-void printAllPatients(const vector<shared_ptr<Patient>>& list) {
-    if (list.empty()) { cout << "Empty\n"; return; }
-    for (size_t i = 0; i < list.size(); i++) cout << i + 1 << ". " << *list[i] << "\n";
+void printAllPatients(const vector<shared_ptr<Patient>>& patientList) {
+    if (patientList.empty()) { cout << "(Database is empty)\n"; return; }
+    int count = patientList.size();
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *patientList[i] << " [" << patientList[i]->classify() << "]\n";
 }
-void printAllAdmins(const vector<shared_ptr<Administrator>>& list) {
-    if (list.empty()) { cout << "Empty\n"; return; }
-    for (size_t i = 0; i < list.size(); i++) cout << i + 1 << ". " << *list[i] << "\n";
+void printAllAdministrators(const vector<shared_ptr<Administrator>>& adminList) {
+    if (adminList.empty()) { cout << "(Database is empty)\n"; return; }
+    int count = adminList.size();
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << *adminList[i] << " [" << adminList[i]->classify() << "]\n";
 }
-void printAllFilials(const vector<shared_ptr<Filial>>& list) {
-    if (list.empty()) { cout << "Empty\n"; return; }
-    for (size_t i = 0; i < list.size(); i++)
-        cout << i + 1 << ". " << list[i]->getName() << " (" << list[i]->getAddress() << ")\n";
+void printAllFilials(const vector<shared_ptr<Filial>>& filialList) {
+    if (filialList.empty()) { cout << "(Database is empty)\n"; return; }
+    int count = filialList.size();
+    for (int i = 0; i < count; i++)
+        cout << i + 1 << ". " << filialList[i]->getName() << " (" << filialList[i]->getAddress() << ")\n";
 }
 
+
 shared_ptr<Patient> findExistingPatient(const vector<shared_ptr<Patient>>& list, const Patient& candidate) {
-    for (const auto& item : list) if (*item == candidate) return item; return nullptr;
+    int count = list.size();
+    for (int i = 0; i < count; i++) {
+        if (*list[i] == candidate) return list[i];
+    }
+    return nullptr;
 }
 shared_ptr<Doctor> findExistingDoctor(const vector<shared_ptr<Doctor>>& list, const Doctor& candidate) {
-    for (const auto& item : list) if (*item == candidate) return item; return nullptr;
+    int count = list.size();
+    for (int i = 0; i < count; i++) {
+        if (*list[i] == candidate) return list[i];
+    }
+    return nullptr;
 }
 shared_ptr<Service> findExistingService(const vector<shared_ptr<Service>>& list, const Service& candidate) {
-    for (const auto& item : list) if (*item == candidate) return item; return nullptr;
+    int count = list.size();
+    for (int i = 0; i < count; i++) {
+        if (*list[i] == candidate) return list[i];
+    }
+    return nullptr;
 }
-shared_ptr<Administrator> findExistingAdmin(const vector<shared_ptr<Administrator>>& list, const Administrator& candidate) {
-    for (const auto& item : list) if (*item == candidate) return item; return nullptr;
+shared_ptr<Administrator> findExistingAdministrator(const vector<shared_ptr<Administrator>>& list, const Administrator& candidate) {
+    int count = list.size();
+    for (int i = 0; i < count; i++) {
+        if (*list[i] == candidate) return list[i];
+    }
+    return nullptr;
 }
 
 void interactiveCompare(const vector<shared_ptr<Doctor>>& doctors,
     const vector<shared_ptr<Service>>& services,
     const vector<shared_ptr<Patient>>& patients,
-    const vector<shared_ptr<Administrator>>& admins) {
+    const vector<shared_ptr<Administrator>>& administrators) {
 
-    cout << "\n1. Compare Doctors\n";
-    cout << "2. Compare Services\n";
-    cout << "3. Compare Patients\n";
-    cout << "4. Compare Administrators\n";
+    cout << "\n=== LOGICAL COMPARISON MENU ===\n";
+    cout << "What business logic do you want to test?\n";
+    cout << "1. Compare Doctors (Determine seniority for a complex surgery)\n";
+    cout << "2. Compare Services (Help a patient choose based on budget)\n";
+    cout << "3. Compare Patients (Determine queue priority based on age)\n";
+    cout << "4. Compare Administrators (Determine who supervises the front desk)\n";
     cout << "0. Cancel\nChoice: ";
 
     int choice;
     cin >> choice;
 
     if (choice == 1) {
-        int count = doctors.size();
-        if (count < 2) return;
+        int doctorsCount = doctors.size();
+        if (doctorsCount < 2) { cout << "Need at least 2 doctors!\n"; return; }
+        cout << "\n--- Select 2 Doctors to compare ---\n";
         printAllDoctors(doctors);
         int idx1, idx2;
-        cin >> idx1 >> idx2; idx1--; idx2--;
-        if (idx1 >= 0 && idx1 < count && idx2 >= 0 && idx2 < count) {
-            auto a1 = doctors[idx1]; auto a2 = doctors[idx2];
-            if (*a1 == *a2) cout << "Same\n";
-            else if (*a1 > *a2) cout << a1->getName() << " is >\n";
-            else if (*a1 < *a2) cout << a2->getName() << " is >\n";
-            else cout << "Equal\n";
+        cout << "Enter first doctor number: "; cin >> idx1; idx1--;
+        cout << "Enter second doctor number: "; cin >> idx2; idx2--;
+
+        if (idx1 >= 0 && idx1 < doctorsCount && idx2 >= 0 && idx2 < doctorsCount) {
+            auto d1 = doctors[idx1];
+            auto d2 = doctors[idx2];
+            cout << "\n[RESULT] Comparing " << d1->getFio() << " and " << d2->getFio() << ":\n";
+
+            if (*d1 == *d2) {
+                cout << "-> DUPLICATE RECORD: these are the same doctor (same name), entered separately!\n";
+            }
+            else if (*d1 > *d2) {
+                cout << "-> LOGIC: " << d1->getFio() << " is MORE experienced. Assign them as the Head Surgeon.\n";
+            }
+            else if (*d1 < *d2) {
+                cout << "-> LOGIC: " << d2->getFio() << " is MORE experienced. Assign them as the Head Surgeon.\n";
+            }
+            else {
+                cout << "-> LOGIC: Both have equal experience. They can assist each other.\n";
+            }
         }
+        else { cout << "Invalid selection!\n"; }
     }
     else if (choice == 2) {
-        int count = services.size();
-        if (count < 2) return;
+        int servicesCount = services.size();
+        if (servicesCount < 2) { cout << "Need at least 2 services!\n"; return; }
+        cout << "\n--- Select 2 Services to compare ---\n";
         printAllServices(services);
         int idx1, idx2;
-        cin >> idx1 >> idx2; idx1--; idx2--;
-        if (idx1 >= 0 && idx1 < count && idx2 >= 0 && idx2 < count) {
-            auto a1 = services[idx1]; auto a2 = services[idx2];
-            if (*a1 == *a2) cout << "Same\n";
-            else if (*a1 > *a2) cout << a1->getName() << " is >\n";
-            else if (*a1 < *a2) cout << a2->getName() << " is >\n";
-            else cout << "Equal\n";
+        cout << "Enter first service number: "; cin >> idx1; idx1--;
+        cout << "Enter second service number: "; cin >> idx2; idx2--;
+
+        if (idx1 >= 0 && idx1 < servicesCount && idx2 >= 0 && idx2 < servicesCount) {
+            auto s1 = services[idx1];
+            auto s2 = services[idx2];
+            cout << "\n[RESULT] Comparing '" << s1->getName() << "' and '" << s2->getName() << "':\n";
+
+            if (*s1 == *s2) {
+                cout << "-> DUPLICATE RECORD: this service is registered twice under the same name.\n";
+            }
+            else if (*s1 > *s2) {
+                cout << "-> LOGIC: '" << s1->getName() << "' is PREMIUM. Recommend '" << s2->getName() << "' for a tight budget.\n";
+            }
+            else if (*s1 < *s2) {
+                cout << "-> LOGIC: '" << s2->getName() << "' is PREMIUM. Recommend '" << s1->getName() << "' for a tight budget.\n";
+            }
+            else {
+                cout << "-> LOGIC: They cost the same. The patient can choose either.\n";
+            }
         }
+        else { cout << "Invalid selection!\n"; }
     }
     else if (choice == 3) {
-        int count = patients.size();
-        if (count < 2) return;
+        int patientsCount = patients.size();
+        if (patientsCount < 2) { cout << "Need at least 2 patients!\n"; return; }
+        cout << "\n--- Select 2 Patients to compare ---\n";
         printAllPatients(patients);
         int idx1, idx2;
-        cin >> idx1 >> idx2; idx1--; idx2--;
-        if (idx1 >= 0 && idx1 < count && idx2 >= 0 && idx2 < count) {
-            auto a1 = patients[idx1]; auto a2 = patients[idx2];
-            if (*a1 == *a2) cout << "Same\n";
-            else if (*a1 > *a2) cout << a1->getName() << " is >\n";
-            else if (*a1 < *a2) cout << a2->getName() << " is >\n";
-            else cout << "Equal\n";
+        cout << "Enter first patient number: "; cin >> idx1; idx1--;
+        cout << "Enter second patient number: "; cin >> idx2; idx2--;
+
+        if (idx1 >= 0 && idx1 < patientsCount && idx2 >= 0 && idx2 < patientsCount) {
+            auto p1 = patients[idx1];
+            auto p2 = patients[idx2];
+            cout << "\n[RESULT] Comparing " << p1->getFio() << " and " << p2->getFio() << ":\n";
+
+            if (*p1 == *p2) {
+                cout << "-> DUPLICATE RECORD: same phone number, this is the same patient entered twice!\n";
+            }
+            else if (*p1 > *p2) {
+                cout << "-> LOGIC: " << p1->getFio() << " is OLDER. They get priority in the queue.\n";
+            }
+            else if (*p1 < *p2) {
+                cout << "-> LOGIC: " << p2->getFio() << " is OLDER. They get priority in the queue.\n";
+            }
+            else {
+                cout << "-> LOGIC: They are the same age. First come, first served.\n";
+            }
         }
+        else { cout << "Invalid selection!\n"; }
     }
     else if (choice == 4) {
-        int count = admins.size();
-        if (count < 2) return;
-        printAllAdmins(admins);
+        int adminsCount = administrators.size();
+        if (adminsCount < 2) { cout << "Need at least 2 administrators!\n"; return; }
+        cout << "\n--- Select 2 Administrators to compare ---\n";
+        printAllAdministrators(administrators);
         int idx1, idx2;
-        cin >> idx1 >> idx2; idx1--; idx2--;
-        if (idx1 >= 0 && idx1 < count && idx2 >= 0 && idx2 < count) {
-            auto a1 = admins[idx1]; auto a2 = admins[idx2];
-            if (*a1 == *a2) cout << "Same\n";
-            else if (*a1 > *a2) cout << a1->getName() << " is >\n";
-            else if (*a1 < *a2) cout << a2->getName() << " is >\n";
-            else cout << "Equal\n";
+        cout << "Enter first administrator number: "; cin >> idx1; idx1--;
+        cout << "Enter second administrator number: "; cin >> idx2; idx2--;
+
+        if (idx1 >= 0 && idx1 < adminsCount && idx2 >= 0 && idx2 < adminsCount) {
+            auto a1 = administrators[idx1];
+            auto a2 = administrators[idx2];
+            cout << "\n[RESULT] Comparing " << a1->getFio() << " and " << a2->getFio() << ":\n";
+
+            if (*a1 == *a2) {
+                cout << "-> DUPLICATE RECORD: these are the same administrator (same name), entered separately!\n";
+            }
+            else if (*a1 > *a2) {
+                cout << "-> LOGIC: " << a1->getFio() << " is MORE experienced. Assign them as the Head Administrator.\n";
+            }
+            else if (*a1 < *a2) {
+                cout << "-> LOGIC: " << a2->getFio() << " is MORE experienced. Assign them as the Head Administrator.\n";
+            }
+            else {
+                cout << "-> LOGIC: Both have equal experience. They can cover each other's shifts.\n";
+            }
         }
+        else { cout << "Invalid selection!\n"; }
     }
 }
 
@@ -122,180 +210,386 @@ int main() {
     vector<shared_ptr<Service>> globalServices;
     vector<shared_ptr<Doctor>> globalDoctors;
     vector<shared_ptr<Patient>> globalPatients;
-    vector<shared_ptr<Administrator>> globalAdmins;
+    vector<shared_ptr<Administrator>> globalAdministrators;
     vector<shared_ptr<Filial>> globalFilials;
 
     globalServices.push_back(make_shared<Service>("Massage", 50.0f, 30));
-    globalDoctors.push_back(make_shared<Doctor>("Ivanov Ivan", "Therapist", 5));
-    globalPatients.push_back(make_shared<Patient>("Smirnov Oleg", 34, "+375291112233"));
-    globalAdmins.push_back(make_shared<Administrator>("Petrov Petr", "Head", 25));
+    globalServices.push_back(make_shared<Service>("Therapist consultation", 25.5f, 15));
+    globalServices.push_back(make_shared<Service>("Xray", 35.0f, 10));
 
-    globalFilials.push_back(make_shared<Filial>("Central", "Main st 10"));
+    globalDoctors.push_back(make_shared<Doctor>("Ivanov Ivan", "Therapist", 5));
+    globalDoctors.push_back(make_shared<Doctor>("Petrova Anna", "Surgeon", 15));
+    globalDoctors.push_back(make_shared<Doctor>("Sidorov Petr", "Masseur", 3));
+
+    globalPatients.push_back(make_shared<Patient>("Smirnov Oleg", 34, "+375291112233"));
+    globalPatients.push_back(make_shared<Patient>("Volkova Maria", 65, "+375291112244"));
+    globalPatients.push_back(make_shared<Patient>("Egorov Denis", 19, "+375291112255"));
+
+    globalAdministrators.push_back(make_shared<Administrator>("Kozlova Elena", "Receptionist", 4, 45));
+    globalAdministrators.push_back(make_shared<Administrator>("Morozov Pavel", "Head administrator", 9, 25));
+    globalAdministrators.push_back(make_shared<Administrator>("Lebedeva Olga", "Receptionist", 1, 12));
+
+    globalFilials.push_back(make_shared<Filial>("Central", "Main st 10", 3, 3, 3, 3));
+    globalFilials.push_back(make_shared<Filial>("North", "Peace st 25", 5, 5, 5, 5));
 
     *globalFilials[0] += globalDoctors[0];
+    *globalFilials[0] += globalDoctors[1];
     *globalFilials[0] += globalServices[0];
     *globalFilials[0] += globalPatients[0];
-    *globalFilials[0] += globalAdmins[0];
+    *globalFilials[0] += globalAdministrators[0];
 
     int mainChoice = -1;
     while (mainChoice != 0) {
-        cout << "\n1. View Branches\n2. View Doctors\n3. View Services\n4. View Patients\n5. View Admins\n6. Create Object\n7. Assign Object\n8. Remove Object\n9. Compare\n10. Delete Object\n11. Check Service\n12. Find Admin\n13. Polymorphic Overview\n0. Exit\nChoice: ";
+        cout << "\n===== CLINIC MANAGEMENT SYSTEM =====\n";
+        cout << "1. View all Branches (with details)\n";
+        cout << "2. View all Doctors\n";
+        cout << "3. View all Services\n";
+        cout << "4. View all Patients\n";
+        cout << "-------------------------------------------\n";
+        cout << "5. Create New Object (via >>)\n";
+        cout << "6. Assign Object to Branch (via +=)\n";
+        cout << "7. Remove Object from Branch (via -=)\n";
+        cout << "8. INTERACTIVE LOGICAL COMPARISON (<, >, ==)\n";
+        cout << "9. DELETE Object completely from Database\n";
+        cout << "-------------------------------------------\n";
+        cout << "10. Check Service availability at a Branch (friend function)\n";
+        cout << "11. Find a Doctor by specialty at a Branch (friend function)\n";
+        cout << "-------------------------------------------\n";
+        cout << "12. Polymorphic Overview of a Branch (base-class pointers)\n";
+        cout << "-------------------------------------------\n";
+        cout << "13. View all Administrators\n";
+        cout << "14. Find an Administrator by position at a Branch (friend function)\n";
+        cout << "0. Exit\n";
+        cout << "Select an option: ";
         cin >> mainChoice;
 
         switch (mainChoice) {
         case 1:
-            for (const auto& f : globalFilials) cout << *f;
+            for (const auto& currentFilial : globalFilials) {
+                cout << *currentFilial;
+                cout << "Doctor count: " << currentFilial->getDoctorCount()
+                    << ", Service count: " << currentFilial->getServiceCount()
+                    << ", Patient count: " << currentFilial->getPatientCount()
+                    << ", Administrator count: " << currentFilial->getAdministratorCount() << "\n";
+            }
             break;
-        case 2: printAllDoctors(globalDoctors); break;
-        case 3: printAllServices(globalServices); break;
-        case 4: printAllPatients(globalPatients); break;
-        case 5: printAllAdmins(globalAdmins); break;
+        case 2: cout << "\nDoctors:\n"; printAllDoctors(globalDoctors); break;
+        case 3: cout << "\nServices:\n"; printAllServices(globalServices); break;
+        case 4: cout << "\nPatients:\n"; printAllPatients(globalPatients); break;
 
-        case 6: {
-            cout << "1. Patient 2. Doctor 3. Service 4. Admin\nChoice: ";
+        case 5: {
+            cout << "What to create?\n1. Patient\n2. Doctor\n3. Service\n4. Administrator\nChoice: ";
             int sub; cin >> sub;
+
             if (sub == 1) {
-                Patient p; cin >> p;
-                if (!findExistingPatient(globalPatients, p)) globalPatients.push_back(make_shared<Patient>(p));
+                Patient p;
+                cin >> p;
+                auto existing = findExistingPatient(globalPatients, p);
+                if (existing) {
+                    cout << "-> Already registered: " << *existing
+                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
+                }
+                else {
+                    globalPatients.push_back(make_shared<Patient>(p));
+                    cout << "Success! New patient registered.\n";
+                }
             }
             else if (sub == 2) {
-                Doctor d; cin >> d;
-                if (!findExistingDoctor(globalDoctors, d)) globalDoctors.push_back(make_shared<Doctor>(d));
+                Doctor d;
+                cin >> d;
+                auto existing = findExistingDoctor(globalDoctors, d);
+                if (existing) {
+                    cout << "-> Already registered: " << *existing
+                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
+                }
+                else {
+                    globalDoctors.push_back(make_shared<Doctor>(d));
+                    cout << "Success! New doctor registered.\n";
+                }
             }
             else if (sub == 3) {
-                Service s; cin >> s;
-                if (!findExistingService(globalServices, s)) globalServices.push_back(make_shared<Service>(s));
+                Service s;
+                cin >> s;
+                auto existing = findExistingService(globalServices, s);
+                if (existing) {
+                    cout << "-> Already registered: " << *existing
+                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
+                }
+                else {
+                    globalServices.push_back(make_shared<Service>(s));
+                    cout << "Success! New service registered.\n";
+                }
             }
             else if (sub == 4) {
-                Administrator a; cin >> a;
-                if (!findExistingAdmin(globalAdmins, a)) globalAdmins.push_back(make_shared<Administrator>(a));
+                Administrator a;
+                cin >> a;
+                auto existing = findExistingAdministrator(globalAdministrators, a);
+                if (existing) {
+                    cout << "-> Already registered: " << *existing
+                        << "\n-> Reusing the existing record instead of creating a duplicate.\n";
+                }
+                else {
+                    globalAdministrators.push_back(make_shared<Administrator>(a));
+                    cout << "Success! New administrator registered.\n";
+                }
             }
+            break;
+        }
+        case 6: {
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+
+            if (bIdx >= 0 && bIdx < filialsCount) {
+                cout << "Assign:\n1. Doctor\n2. Service\n3. Patient\n4. Administrator\nChoice: ";
+                int sub; cin >> sub;
+
+                if (sub == 1) {
+                    printAllDoctors(globalDoctors);
+                    cout << "Select Doctor index: ";
+                    int dIdx; cin >> dIdx; dIdx--;
+                    int doctorsCount = globalDoctors.size();
+                    if (dIdx >= 0 && dIdx < doctorsCount) *globalFilials[bIdx] += globalDoctors[dIdx];
+                }
+                else if (sub == 2) {
+                    printAllServices(globalServices);
+                    cout << "Select Service index: ";
+                    int sIdx; cin >> sIdx; sIdx--;
+                    int servicesCount = globalServices.size();
+                    if (sIdx >= 0 && sIdx < servicesCount) *globalFilials[bIdx] += globalServices[sIdx];
+                }
+                else if (sub == 3) {
+                    printAllPatients(globalPatients);
+                    cout << "Select Patient index: ";
+                    int pIdx; cin >> pIdx; pIdx--;
+                    int patientsCount = globalPatients.size();
+                    if (pIdx >= 0 && pIdx < patientsCount) *globalFilials[bIdx] += globalPatients[pIdx];
+                }
+                else if (sub == 4) {
+                    printAllAdministrators(globalAdministrators);
+                    cout << "Select Administrator index: ";
+                    int aIdx; cin >> aIdx; aIdx--;
+                    int adminsCount = globalAdministrators.size();
+                    if (aIdx >= 0 && aIdx < adminsCount) *globalFilials[bIdx] += globalAdministrators[aIdx];
+                }
+            }
+            else { cout << "Invalid Branch index!\n"; }
             break;
         }
         case 7: {
             printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
             int bIdx; cin >> bIdx; bIdx--;
-            if (bIdx >= 0 && bIdx < globalFilials.size()) {
-                cout << "1. Doctor 2. Service 3. Patient 4. Admin\nChoice: ";
+            int filialsCount = globalFilials.size();
+
+            if (bIdx >= 0 && bIdx < filialsCount) {
+                cout << "Remove:\n1. Doctor\n2. Service\n3. Patient\n4. Administrator\nChoice: ";
                 int sub; cin >> sub;
+
                 if (sub == 1) {
-                    printAllDoctors(globalDoctors); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalDoctors.size()) *globalFilials[bIdx] += globalDoctors[idx];
+                    printAllDoctors(globalDoctors);
+                    cout << "Select Doctor index to remove: ";
+                    int dIdx; cin >> dIdx; dIdx--;
+                    int doctorsCount = globalDoctors.size();
+                    if (dIdx >= 0 && dIdx < doctorsCount) *globalFilials[bIdx] -= globalDoctors[dIdx];
                 }
                 else if (sub == 2) {
-                    printAllServices(globalServices); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalServices.size()) *globalFilials[bIdx] += globalServices[idx];
+                    printAllServices(globalServices);
+                    cout << "Select Service index to remove: ";
+                    int sIdx; cin >> sIdx; sIdx--;
+                    int servicesCount = globalServices.size();
+                    if (sIdx >= 0 && sIdx < servicesCount) *globalFilials[bIdx] -= globalServices[sIdx];
                 }
                 else if (sub == 3) {
-                    printAllPatients(globalPatients); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalPatients.size()) *globalFilials[bIdx] += globalPatients[idx];
+                    printAllPatients(globalPatients);
+                    cout << "Select Patient index to remove: ";
+                    int pIdx; cin >> pIdx; pIdx--;
+                    int patientsCount = globalPatients.size();
+                    if (pIdx >= 0 && pIdx < patientsCount) *globalFilials[bIdx] -= globalPatients[pIdx];
                 }
                 else if (sub == 4) {
-                    printAllAdmins(globalAdmins); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalAdmins.size()) *globalFilials[bIdx] += globalAdmins[idx];
+                    printAllAdministrators(globalAdministrators);
+                    cout << "Select Administrator index to remove: ";
+                    int aIdx; cin >> aIdx; aIdx--;
+                    int adminsCount = globalAdministrators.size();
+                    if (aIdx >= 0 && aIdx < adminsCount) *globalFilials[bIdx] -= globalAdministrators[aIdx];
                 }
             }
+            else { cout << "Invalid Branch index!\n"; }
             break;
         }
-        case 8: {
-            printAllFilials(globalFilials);
-            int bIdx; cin >> bIdx; bIdx--;
-            if (bIdx >= 0 && bIdx < globalFilials.size()) {
-                cout << "1. Doctor 2. Service 3. Patient 4. Admin\nChoice: ";
-                int sub; cin >> sub;
-                if (sub == 1) {
-                    printAllDoctors(globalDoctors); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalDoctors.size()) *globalFilials[bIdx] -= globalDoctors[idx];
-                }
-                else if (sub == 2) {
-                    printAllServices(globalServices); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalServices.size()) *globalFilials[bIdx] -= globalServices[idx];
-                }
-                else if (sub == 3) {
-                    printAllPatients(globalPatients); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalPatients.size()) *globalFilials[bIdx] -= globalPatients[idx];
-                }
-                else if (sub == 4) {
-                    printAllAdmins(globalAdmins); int idx; cin >> idx; idx--;
-                    if (idx >= 0 && idx < globalAdmins.size()) *globalFilials[bIdx] -= globalAdmins[idx];
-                }
-            }
-            break;
-        }
-        case 9:
-            interactiveCompare(globalDoctors, globalServices, globalPatients, globalAdmins);
+        case 8:
+            interactiveCompare(globalDoctors, globalServices, globalPatients, globalAdministrators);
             break;
 
-        case 10: {
-            cout << "1. Doctor 2. Service 3. Patient 4. Admin\nChoice: ";
+        case 9: {
+            cout << "What to permanently delete from Database?\n1. Doctor\n2. Service\n3. Patient\n4. Administrator\nChoice: ";
             int sub; cin >> sub;
+            cout << "\n(Note: The object will be automatically removed from ALL branches first)\n";
+
             if (sub == 1) {
-                printAllDoctors(globalDoctors); int idx; cin >> idx; idx--;
-                if (idx >= 0 && idx < globalDoctors.size()) {
-                    auto toDel = globalDoctors[idx];
-                    for (auto& f : globalFilials) *f -= toDel;
-                    globalDoctors.erase(globalDoctors.begin() + idx);
+                printAllDoctors(globalDoctors);
+                cout << "Select Doctor index to delete: ";
+                int dIdx; cin >> dIdx; dIdx--;
+                int doctorsCount = globalDoctors.size();
+                if (dIdx >= 0 && dIdx < doctorsCount) {
+                    auto toDelete = globalDoctors[dIdx];
+                    for (auto& f : globalFilials) { *f -= toDelete; }
+                    globalDoctors.erase(globalDoctors.begin() + dIdx);
+                    cout << "-> Doctor permanently deleted from the system.\n";
                 }
+                else { cout << "Invalid index!\n"; }
             }
             else if (sub == 2) {
-                printAllServices(globalServices); int idx; cin >> idx; idx--;
-                if (idx >= 0 && idx < globalServices.size()) {
-                    auto toDel = globalServices[idx];
-                    for (auto& f : globalFilials) *f -= toDel;
-                    globalServices.erase(globalServices.begin() + idx);
+                printAllServices(globalServices);
+                cout << "Select Service index to delete: ";
+                int sIdx; cin >> sIdx; sIdx--;
+                int servicesCount = globalServices.size();
+                if (sIdx >= 0 && sIdx < servicesCount) {
+                    auto toDelete = globalServices[sIdx];
+                    for (auto& f : globalFilials) { *f -= toDelete; }
+                    globalServices.erase(globalServices.begin() + sIdx);
+                    cout << "-> Service permanently deleted from the system.\n";
                 }
+                else { cout << "Invalid index!\n"; }
             }
             else if (sub == 3) {
-                printAllPatients(globalPatients); int idx; cin >> idx; idx--;
-                if (idx >= 0 && idx < globalPatients.size()) {
-                    auto toDel = globalPatients[idx];
-                    for (auto& f : globalFilials) *f -= toDel;
-                    globalPatients.erase(globalPatients.begin() + idx);
+                printAllPatients(globalPatients);
+                cout << "Select Patient index to delete: ";
+                int pIdx; cin >> pIdx; pIdx--;
+                int patientsCount = globalPatients.size();
+                if (pIdx >= 0 && pIdx < patientsCount) {
+                    auto toDelete = globalPatients[pIdx];
+                    for (auto& f : globalFilials) { *f -= toDelete; }
+                    globalPatients.erase(globalPatients.begin() + pIdx);
+                    cout << "-> Patient permanently deleted from the system.\n";
                 }
+                else { cout << "Invalid index!\n"; }
             }
             else if (sub == 4) {
-                printAllAdmins(globalAdmins); int idx; cin >> idx; idx--;
-                if (idx >= 0 && idx < globalAdmins.size()) {
-                    auto toDel = globalAdmins[idx];
-                    for (auto& f : globalFilials) *f -= toDel;
-                    globalAdmins.erase(globalAdmins.begin() + idx);
+                printAllAdministrators(globalAdministrators);
+                cout << "Select Administrator index to delete: ";
+                int aIdx; cin >> aIdx; aIdx--;
+                int adminsCount = globalAdministrators.size();
+                if (aIdx >= 0 && aIdx < adminsCount) {
+                    auto toDelete = globalAdministrators[aIdx];
+                    for (auto& f : globalFilials) { *f -= toDelete; }
+                    globalAdministrators.erase(globalAdministrators.begin() + aIdx);
+                    cout << "-> Administrator permanently deleted from the system.\n";
                 }
+                else { cout << "Invalid index!\n"; }
             }
+            else { cout << "Invalid choice!\n"; }
+            break;
+        }
+
+        case 10: {
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+
+            printAllServices(globalServices);
+            cout << "Select Service index to check: ";
+            int sIdx; cin >> sIdx; sIdx--;
+            int servicesCount = globalServices.size();
+            if (sIdx < 0 || sIdx >= servicesCount) { cout << "Invalid Service index!\n"; break; }
+
+            bool available = isServiceAvailable(*globalFilials[bIdx], *globalServices[sIdx]);
+            cout << "-> '" << globalServices[sIdx]->getName() << "' at \""
+                << globalFilials[bIdx]->getName() << "\": "
+                << (available ? "AVAILABLE, can be booked here.\n" : "NOT offered at this branch.\n");
             break;
         }
         case 11: {
-            printAllFilials(globalFilials); int bIdx; cin >> bIdx; bIdx--;
-            if (bIdx >= 0 && bIdx < globalFilials.size()) {
-                printAllServices(globalServices); int sIdx; cin >> sIdx; sIdx--;
-                if (sIdx >= 0 && sIdx < globalServices.size()) {
-                    if (isServiceAvailable(*globalFilials[bIdx], *globalServices[sIdx])) cout << "Yes\n";
-                    else cout << "No\n";
-                }
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+
+            cout << "Enter specialty to search for: ";
+            string specialty; cin >> ws; getline(cin, specialty);
+
+            auto found = findDoctorBySpecialty(*globalFilials[bIdx], specialty);
+            if (found) {
+                cout << "-> Found: " << *found << "\n";
+            }
+            else {
+                cout << "-> No doctor with specialty \"" << specialty
+                    << "\" at \"" << globalFilials[bIdx]->getName() << "\".\n";
             }
             break;
         }
+
         case 12: {
-            printAllFilials(globalFilials); int bIdx; cin >> bIdx; bIdx--;
-            if (bIdx >= 0 && bIdx < globalFilials.size()) {
-                string pos; cin >> ws; getline(cin, pos);
-                auto found = findAdminByPosition(*globalFilials[bIdx], pos);
-                if (found) cout << *found << "\n";
-            }
-            break;
-        }
-        case 13: {
-            printAllFilials(globalFilials); int bIdx; cin >> bIdx; bIdx--;
-            if (bIdx >= 0 && bIdx < globalFilials.size()) {
-                vector<shared_ptr<Person>> people = globalFilials[bIdx]->getAllPeople();
-                for (const auto& p : people) {
-                    cout << "[" << p->getEntityType() << "] ";
-                    p->printInfo(cout);
-                    cout << " -> " << p->classify() << "\n";
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+
+            vector<shared_ptr<Person>> all = globalFilials[bIdx]->getAllEntities();
+            if (all.empty()) { cout << "(This branch has nothing assigned yet)\n"; break; }
+
+            cout << "\nPolymorphic overview of \"" << globalFilials[bIdx]->getName() << "\" (via Person pointers):\n";
+            cout << "1. Count people by type      (virtual getEntityType)\n";
+            cout << "2. Print full information    (virtual printInfo)\n";
+            cout << "3. Type-specific evaluation  (virtual classify)\n";
+            cout << "Choice: ";
+            int sub; cin >> sub;
+
+            if (sub == 1) {
+                int doctors = 0, patients = 0, administrators = 0;
+                for (const auto& entity : all) {
+                    string type = entity->getEntityType();
+                    if (type == "Doctor") doctors++;
+                    else if (type == "Patient") patients++;
+                    else if (type == "Administrator") administrators++;
                 }
+                cout << "Doctors: " << doctors << "\n";
+                cout << "Patients: " << patients << "\n";
+                cout << "Administrators: " << administrators << "\n";
+            }
+            else if (sub == 2) {
+                for (const auto& entity : all) cout << *entity << "\n";
+            }
+            else if (sub == 3) {
+                for (const auto& entity : all)
+                    cout << "[" << entity->getEntityType() << "] " << entity->getName()
+                    << " -> " << entity->classify() << "\n";
+            }
+            else { cout << "Invalid selection!\n"; }
+            break;
+        }
+
+        case 13: cout << "\nAdministrators:\n"; printAllAdministrators(globalAdministrators); break;
+
+        case 14: {
+            printAllFilials(globalFilials);
+            cout << "Select Branch index: ";
+            int bIdx; cin >> bIdx; bIdx--;
+            int filialsCount = globalFilials.size();
+            if (bIdx < 0 || bIdx >= filialsCount) { cout << "Invalid Branch index!\n"; break; }
+
+            cout << "Enter position to search for: ";
+            string position; cin >> ws; getline(cin, position);
+
+            auto found = findAdministratorByPosition(*globalFilials[bIdx], position);
+            if (found) {
+                cout << "-> Found: " << *found << "\n";
+            }
+            else {
+                cout << "-> No administrator with position \"" << position
+                    << "\" at \"" << globalFilials[bIdx]->getName() << "\".\n";
             }
             break;
         }
-        case 0: break;
+
+        case 0: cout << "Goodbye!\n"; break;
+        default: cout << "Wrong option!\n"; break;
         }
     }
     return 0;

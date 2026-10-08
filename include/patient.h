@@ -28,7 +28,6 @@ public:
     bool operator<(const Patient& other) const;
     bool operator>(const Patient& other) const;
 
-    
     std::string getEntityType() const override;
     void printInfo(std::ostream& os) const override;
     std::string classify() const override;

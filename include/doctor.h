@@ -26,7 +26,6 @@ public:
     bool operator<(const Doctor& other) const;
     bool operator>(const Doctor& other) const;
 
-    
     std::string getEntityType() const override;
     void printInfo(std::ostream& os) const override;
     std::string classify() const override;

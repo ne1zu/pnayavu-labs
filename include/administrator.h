@@ -1,20 +1,30 @@
 #pragma once
+#include <string>
+#include <string_view>
+#include <iostream>
 #include "person.h"
 
 class Administrator : public Person {
 private:
     std::string position;
-    int managedPeople;
+    int experience;
+    int patientsPerDay;
+
     static int counter;
 
 public:
-    Administrator(std::string_view name = "", std::string_view position = "", int managedPeople = 0);
+    Administrator(std::string_view fio = "", std::string_view position = "",
+        int experience = 0, int patientsPerDay = 0);
 
+    std::string getFio() const;
     std::string getPosition() const;
-    int getManagedPeople() const;
+    int getExperience() const;
+    int getPatientsPerDay() const;
 
-    void setPosition(std::string_view posValue);
-    void setManagedPeople(int count);
+    void setFio(std::string_view fioValue);
+    void setPosition(std::string_view positionValue);
+    void setExperience(int expValue);
+    void setPatientsPerDay(int countValue);
 
     bool operator==(const Administrator& other) const;
     bool operator<(const Administrator& other) const;

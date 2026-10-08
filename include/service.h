@@ -3,12 +3,14 @@
 #include <string_view>
 #include <iostream>
 
+
 class Service {
 private:
     int id;
     std::string name;
     float price;
     int length;
+
     static int counter;
 
 public:
@@ -26,6 +28,10 @@ public:
     bool operator==(const Service& other) const;
     bool operator<(const Service& other) const;
     bool operator>(const Service& other) const;
+
+    std::string getEntityType() const;
+    void printInfo(std::ostream& os) const;
+    std::string classify() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Service& srv);
     friend std::istream& operator>>(std::istream& is, Service& srv);

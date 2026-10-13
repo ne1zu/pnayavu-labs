@@ -8,17 +8,14 @@ class Patient : public Person {
 private:
     int age;
     std::string phone;
-
     static int counter;
 
 public:
-    Patient(std::string_view fio = "", int age = 0, std::string_view phone = "");
+    Patient(std::string_view name = "", int age = 0, std::string_view phone = "");
 
-    std::string getFio() const;
     int getAge() const;
     std::string getPhone() const;
 
-    void setFio(std::string_view fioValue);
     void setAge(int ageValue);
     void setPhone(std::string_view phoneValue);
 

@@ -3,14 +3,12 @@
 #include <string_view>
 #include <iostream>
 
-
 class Service {
 private:
     int id;
     std::string name;
     float price;
     int length;
-
     static int counter;
 
 public:

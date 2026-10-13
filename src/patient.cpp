@@ -2,18 +2,16 @@
 
 int Patient::counter = 0;
 
-Patient::Patient(std::string_view fio, int age, std::string_view phone)
-    : Person(fio, counter), age(age), phone(phone) {
+Patient::Patient(std::string_view name, int age, std::string_view phone)
+    : Person(name, counter), age(age), phone(phone) {
 }
 
-std::string Patient::getFio() const { return getName(); }
 int Patient::getAge() const { return age; }
 std::string Patient::getPhone() const { return phone; }
 
-void Patient::setFio(std::string_view fioValue) { setName(fioValue); }
 void Patient::setAge(int ageValue) {
     if (ageValue < 0) {
-        std::cout << " Age cannot be negative!\n";
+        std::cout << "[ERROR] Invalid age!\n";
         return;
     }
     age = ageValue;
@@ -39,17 +37,14 @@ std::string Patient::classify() const {
 }
 
 std::istream& operator>>(std::istream& is, Patient& patient) {
-    std::string fioValue;
+    std::string nameValue;
     std::cout << "Enter Patient Name: ";
-    std::getline(is >> std::ws, fioValue);
-    patient.setFio(fioValue);
+    std::getline(is >> std::ws, nameValue);
+    patient.setName(nameValue);
 
     std::cout << "Enter Patient Age: ";
     is >> patient.age;
-    if (patient.age < 0) {
-        std::cout << "[ERROR] Invalid age! Setting to 0.\n";
-        patient.age = 0;
-    }
+    if (patient.age < 0) patient.age = 0;
 
     std::cout << "Enter Patient Phone: ";
     std::getline(is >> std::ws, patient.phone);

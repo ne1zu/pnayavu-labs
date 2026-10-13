@@ -2,19 +2,17 @@
 
 int Doctor::counter = 0;
 
-Doctor::Doctor(std::string_view fio, std::string_view specialty, int experience)
-    : Person(fio, counter), specialty(specialty), experience(experience) {
+Doctor::Doctor(std::string_view name, std::string_view specialty, int experience)
+    : Person(name, counter), specialty(specialty), experience(experience) {
 }
 
-std::string Doctor::getFio() const { return getName(); }
 std::string Doctor::getSpecialty() const { return specialty; }
 int Doctor::getExperience() const { return experience; }
 
-void Doctor::setFio(std::string_view fioValue) { setName(fioValue); }
 void Doctor::setSpecialty(std::string_view specialtyValue) { specialty = specialtyValue; }
 void Doctor::setExperience(int expValue) {
     if (expValue < 0) {
-        std::cout << "[ERROR] Experience cannot be negative!\n";
+        std::cout << "[ERROR] Invalid experience!\n";
         return;
     }
     experience = expValue;
@@ -39,19 +37,16 @@ std::string Doctor::classify() const {
 }
 
 std::istream& operator>>(std::istream& is, Doctor& doc) {
-    std::string fioValue;
+    std::string nameValue;
     std::cout << "Enter Doctor Name: ";
-    std::getline(is >> std::ws, fioValue);
-    doc.setFio(fioValue);
+    std::getline(is >> std::ws, nameValue);
+    doc.setName(nameValue);
 
     std::cout << "Enter Specialty: ";
     std::getline(is >> std::ws, doc.specialty);
 
     std::cout << "Enter Experience (years): ";
     is >> doc.experience;
-    if (doc.experience < 0) {
-        std::cout << "[ERROR] Invalid experience! Setting to 0.\n";
-        doc.experience = 0;
-    }
+    if (doc.experience < 0) doc.experience = 0;
     return is;
 }

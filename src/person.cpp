@@ -1,7 +1,6 @@
 #include "person.h"
 
-Person::Person(std::string_view name, int& typeCounter)
-    : name(name) {
+Person::Person(std::string_view name, int& typeCounter) : name(name) {
     id = typeCounter++;
 }
 

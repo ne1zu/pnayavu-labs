@@ -8,21 +8,20 @@ Service::Service(std::string_view name, float price, int length)
 
 int Service::getId() const { return id; }
 std::string Service::getName() const { return name; }
-void Service::setName(std::string_view nameValue) { name = nameValue; }
-
 float Service::getPrice() const { return price; }
 int Service::getLength() const { return length; }
 
+void Service::setName(std::string_view nameValue) { name = nameValue; }
 void Service::setPrice(float priceValue) {
     if (priceValue < 0) {
-        std::cout << "[ERROR] Price cannot be negative.\n";
+        std::cout << "[ERROR] Invalid price.\n";
         return;
     }
     price = priceValue;
 }
 void Service::setLength(int lengthValue) {
     if (lengthValue <= 0) {
-        std::cout << " Duration must be positive.\n";
+        std::cout << "[ERROR] Invalid duration.\n";
         return;
     }
     length = lengthValue;
@@ -49,23 +48,15 @@ std::ostream& operator<<(std::ostream& os, const Service& srv) {
 }
 
 std::istream& operator>>(std::istream& is, Service& srv) {
-    std::string nameValue;
     std::cout << "Enter Service Name: ";
-    std::getline(is >> std::ws, nameValue);
-    srv.setName(nameValue);
+    std::getline(is >> std::ws, srv.name);
 
     std::cout << "Enter Price ($): ";
     is >> srv.price;
-    if (srv.price < 0) {
-        std::cout << " Invalid price! Setting to 0.\n";
-        srv.price = 0;
-    }
+    if (srv.price < 0) srv.price = 0;
 
     std::cout << "Enter Duration (min): ";
     is >> srv.length;
-    if (srv.length <= 0) {
-        std::cout << " Invalid duration! Setting to 10 min.\n";
-        srv.length = 10;
-    }
+    if (srv.length <= 0) srv.length = 10;
     return is;
 }

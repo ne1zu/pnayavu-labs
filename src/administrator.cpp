@@ -2,29 +2,27 @@
 
 int Administrator::counter = 0;
 
-Administrator::Administrator(std::string_view fio, std::string_view position,
+Administrator::Administrator(std::string_view name, std::string_view position,
     int experience, int patientsPerDay)
-    : Person(fio, counter), position(position),
-      experience(experience), patientsPerDay(patientsPerDay) {
+    : Person(name, counter), position(position),
+    experience(experience), patientsPerDay(patientsPerDay) {
 }
 
-std::string Administrator::getFio() const { return getName(); }
 std::string Administrator::getPosition() const { return position; }
 int Administrator::getExperience() const { return experience; }
 int Administrator::getPatientsPerDay() const { return patientsPerDay; }
 
-void Administrator::setFio(std::string_view fioValue) { setName(fioValue); }
 void Administrator::setPosition(std::string_view positionValue) { position = positionValue; }
 void Administrator::setExperience(int expValue) {
     if (expValue < 0) {
-        std::cout << "[ERROR] Experience cannot be negative!\n";
+        std::cout << "[ERROR] Invalid experience!\n";
         return;
     }
     experience = expValue;
 }
 void Administrator::setPatientsPerDay(int countValue) {
     if (countValue < 0) {
-        std::cout << "[ERROR] Patients per day cannot be negative!\n";
+        std::cout << "[ERROR] Invalid patients amount!\n";
         return;
     }
     patientsPerDay = countValue;
@@ -40,7 +38,7 @@ void Administrator::printInfo(std::ostream& os) const {
     os << getEntityType() << " ";
     Person::printInfo(os);
     os << " | Position: " << position << " | Experience: " << experience
-       << " years | Patients/day: " << patientsPerDay;
+        << " years | Patients/day: " << patientsPerDay;
 }
 
 std::string Administrator::classify() const {
@@ -50,26 +48,20 @@ std::string Administrator::classify() const {
 }
 
 std::istream& operator>>(std::istream& is, Administrator& admin) {
-    std::string fioValue;
+    std::string nameValue;
     std::cout << "Enter Administrator Name: ";
-    std::getline(is >> std::ws, fioValue);
-    admin.setFio(fioValue);
+    std::getline(is >> std::ws, nameValue);
+    admin.setName(nameValue);
 
     std::cout << "Enter Position: ";
     std::getline(is >> std::ws, admin.position);
 
     std::cout << "Enter Experience (years): ";
     is >> admin.experience;
-    if (admin.experience < 0) {
-        std::cout << "[ERROR] Invalid experience! Setting to 0.\n";
-        admin.experience = 0;
-    }
+    if (admin.experience < 0) admin.experience = 0;
 
     std::cout << "Enter Patients per day: ";
     is >> admin.patientsPerDay;
-    if (admin.patientsPerDay < 0) {
-        std::cout << "[ERROR] Invalid patients per day! Setting to 0.\n";
-        admin.patientsPerDay = 0;
-    }
+    if (admin.patientsPerDay < 0) admin.patientsPerDay = 0;
     return is;
 }

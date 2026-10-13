@@ -9,19 +9,16 @@ private:
     std::string position;
     int experience;
     int patientsPerDay;
-
     static int counter;
 
 public:
-    Administrator(std::string_view fio = "", std::string_view position = "",
+    Administrator(std::string_view name = "", std::string_view position = "",
         int experience = 0, int patientsPerDay = 0);
 
-    std::string getFio() const;
     std::string getPosition() const;
     int getExperience() const;
     int getPatientsPerDay() const;
 
-    void setFio(std::string_view fioValue);
     void setPosition(std::string_view positionValue);
     void setExperience(int expValue);
     void setPatientsPerDay(int countValue);

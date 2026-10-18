@@ -98,7 +98,7 @@ void Appointment::printInfo(std::ostream& os) const {
 }
 
 std::string Appointment::classify() const {
-    if (getStartMinutes() < 12 * 60) return "Morning";
+    if (isMorning()) return "Morning";
     if (getStartMinutes() < 17 * 60) return "Afternoon";
     return "Evening";
 }

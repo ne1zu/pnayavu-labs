@@ -3,7 +3,7 @@
 int Doctor::counter = 0;
 
 Doctor::Doctor(std::string_view name, std::string_view specialty, int experience)
-    : Person(name, counter), specialty(specialty), experience(experience) {
+    : Person(name, counter), specialty(specialty), experience(experience < 0 ? 0 : experience) {
 }
 
 std::string Doctor::getSpecialty() const { return specialty; }

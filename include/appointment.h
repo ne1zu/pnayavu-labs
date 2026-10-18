@@ -50,6 +50,7 @@ public:
     bool hasValidDateTime() const;
     bool fitsWorkingHours() const;
     bool overlaps(const Appointment& other) const;
+    bool isMorning() const { return getStartMinutes() < 12 * 60; }
 
     int getStartMinutes() const;
     int getEndMinutes() const;

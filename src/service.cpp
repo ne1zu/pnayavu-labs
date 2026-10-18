@@ -3,7 +3,7 @@
 int Service::counter = 0;
 
 Service::Service(std::string_view name, float price, int length)
-    : id(counter++), name(name), price(price), length(length) {
+    : id(counter++), name(name), price(price < 0 ? 0.0f : price), length(length < 0 ? 0 : length) {
 }
 
 int Service::getId() const { return id; }

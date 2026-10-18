@@ -3,7 +3,7 @@
 int Patient::counter = 0;
 
 Patient::Patient(std::string_view name, int age, std::string_view phone)
-    : Person(name, counter), age(age), phone(phone) {
+    : Person(name, counter), age(age < 0 ? 0 : age), phone(phone) {
 }
 
 int Patient::getAge() const { return age; }

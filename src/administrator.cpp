@@ -5,7 +5,8 @@ int Administrator::counter = 0;
 Administrator::Administrator(std::string_view name, std::string_view position,
     int experience, int patientsPerDay)
     : Person(name, counter), position(position),
-    experience(experience), patientsPerDay(patientsPerDay) {
+    experience(experience < 0 ? 0 : experience),
+    patientsPerDay(patientsPerDay < 0 ? 0 : patientsPerDay) {
 }
 
 std::string Administrator::getPosition() const { return position; }

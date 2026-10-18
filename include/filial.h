@@ -12,7 +12,7 @@
 #include "appointment.h"
 #include "collection.h"
 
-#define MEMBERSIZE 10
+const int DEFAULT_CAPACITY = 10;
 
 class Filial {
 private:
@@ -33,8 +33,8 @@ private:
 
 public:
     Filial(std::string_view name = "", std::string_view address = "",
-        int doctorCapacity = MEMBERSIZE, int serviceCapacity = MEMBERSIZE, int patientCapacity = MEMBERSIZE,
-        int administratorCapacity = MEMBERSIZE, int appointmentCapacity = MEMBERSIZE);
+        int doctorCapacity = DEFAULT_CAPACITY, int serviceCapacity = DEFAULT_CAPACITY, int patientCapacity = DEFAULT_CAPACITY,
+        int administratorCapacity = DEFAULT_CAPACITY, int appointmentCapacity = DEFAULT_CAPACITY);
 
     std::string getName() const;
     std::string getAddress() const;
@@ -64,6 +64,11 @@ public:
     Collection<Patient> getPatients() const;
     Collection<Administrator> getAdministrators() const;
     Collection<Appointment> getAppointments() const;
+
+    bool contains(const std::shared_ptr<Doctor>& doctor) const;
+    bool contains(const std::shared_ptr<Service>& service) const;
+    bool contains(const std::shared_ptr<Patient>& patient) const;
+    bool contains(const std::shared_ptr<Administrator>& administrator) const;
 
     std::vector<std::shared_ptr<Person>> getAllEntities() const;
 

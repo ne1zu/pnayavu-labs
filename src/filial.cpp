@@ -1,41 +1,45 @@
 #include "filial.h"
 
 namespace {
-    void printCapacityError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Capacity reached!\n";
-    }
-    void printNotFoundError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Not found!\n";
+    void printNullObjectError(const std::string& filialName, const std::string& objectType) {
+        std::cout << "[ERROR] Branch '" << filialName << "': " << objectType << " is null.\n";
     }
     void printDuplicateError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Duplicate!\n";
+        std::cout << "[ERROR] Branch '" << filialName << "': this " << objectType << " is already added.\n";
     }
-    void printNullObjectError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Null object!\n";
+    void printCapacityError(const std::string& filialName, const std::string& objectType) {
+        std::cout << "[ERROR] Branch '" << filialName << "': capacity for " << objectType << " is full.\n";
+    }
+    void printNotFoundError(const std::string& filialName, const std::string& objectType) {
+        std::cout << "[ERROR] Branch '" << filialName << "': this " << objectType << " is not found.\n";
     }
     void printNotRegisteredError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Not registered at this branch!\n";
-    }
-    void printIncompleteAppointmentError() {
-        std::cout << "[ERROR] Incomplete appointment!\n";
-    }
-    void printForeignAppointmentError(const std::string& filialName, const std::string& otherName) {
-        std::cout << "[ERROR] Belongs to another branch!\n";
-    }
-    void printBadDateTimeError() {
-        std::cout << "[ERROR] Invalid date/time!\n";
-    }
-    void printOutsideWorkingHoursError() {
-        std::cout << "[ERROR] Outside working hours!\n";
-    }
-    void printBusyError(const std::string& who) {
-        std::cout << "[ERROR] Already has an appointment!\n";
-    }
-    void printCancelledInfo(const std::string& filialName, int count, const std::string& reason) {
-        std::cout << "[INFO] Appointments cancelled.\n";
+        std::cout << "[ERROR] Branch '" << filialName << "': " << objectType << " is not registered at this branch.\n";
     }
     void printNoDoctorsError(const std::string& filialName) {
-        std::cout << "[ERROR] No doctors assigned!\n";
+        std::cout << "[ERROR] Branch '" << filialName << "': add a doctor before adding patients.\n";
+    }
+    void printIncompleteAppointmentError() {
+        std::cout << "[ERROR] Appointment must have a patient, a doctor and a service.\n";
+    }
+    void printForeignAppointmentError(const std::string& filialName, const std::string& otherName) {
+        std::cout << "[ERROR] Appointment belongs to branch '" << otherName
+            << "', not to '" << filialName << "'.\n";
+    }
+    void printBadDateTimeError() {
+        std::cout << "[ERROR] Appointment has an invalid date or time.\n";
+    }
+    void printOutsideWorkingHoursError() {
+        std::cout << "[ERROR] Appointment must fit into working hours "
+            << "08:00-20:00 (including the service length).\n";
+    }
+    void printBusyError(const std::string& objectType, const std::string& personName) {
+        std::cout << "[ERROR] " << objectType << " '" << personName
+            << "' already has an appointment at this time.\n";
+    }
+    void printCancelledInfo(const std::string& filialName, int count, const std::string& objectType) {
+        std::cout << "[INFO] Branch '" << filialName << "': " << count
+            << " appointment(s) cancelled because the " << objectType << " was removed.\n";
     }
 }
 
@@ -62,6 +66,11 @@ Collection<Patient> Filial::getPatients() const { return patients; }
 Collection<Administrator> Filial::getAdministrators() const { return administrators; }
 Collection<Appointment> Filial::getAppointments() const { return appointments; }
 
+bool Filial::contains(const std::shared_ptr<Doctor>& doctor) const { return doctor && indexOfDoctor(doctor) >= 0; }
+bool Filial::contains(const std::shared_ptr<Service>& service) const { return service && indexOfService(service) >= 0; }
+bool Filial::contains(const std::shared_ptr<Patient>& patient) const { return patient && indexOfPatient(patient) >= 0; }
+bool Filial::contains(const std::shared_ptr<Administrator>& administrator) const { return administrator && indexOfAdministrator(administrator) >= 0; }
+
 void Filial::setName(std::string_view nameValue) {
     name = nameValue;
     for (const auto& appointment : appointments) appointment->setFilialName(nameValue);
@@ -82,8 +91,8 @@ int Filial::indexOfAdministrator(const std::shared_ptr<Administrator>& administr
 int Filial::indexOfAppointment(const std::shared_ptr<Appointment>& appointment) const { return appointments.indexOf(*appointment); }
 
 bool Filial::isDoctorBusy(const Appointment& candidate) const {
-    for (const auto& appt : appointments) {
-        if (*appt->getDoctor() == *candidate.getDoctor() && appt->overlaps(candidate)) {
+    for (const auto& existing : appointments) {
+        if (*existing->getDoctor() == *candidate.getDoctor() && existing->overlaps(candidate)) {
             return true;
         }
     }
@@ -91,8 +100,8 @@ bool Filial::isDoctorBusy(const Appointment& candidate) const {
 }
 
 bool Filial::isPatientBusy(const Appointment& candidate) const {
-    for (const auto& appt : appointments) {
-        if (*appt->getPatient() == *candidate.getPatient() && appt->overlaps(candidate)) {
+    for (const auto& existing : appointments) {
+        if (*existing->getPatient() == *candidate.getPatient() && existing->overlaps(candidate)) {
             return true;
         }
     }
@@ -100,36 +109,36 @@ bool Filial::isPatientBusy(const Appointment& candidate) const {
 }
 
 int Filial::cancelAppointmentsOfDoctor(const Doctor& doctor) {
-    int count = 0;
-    for (const auto& a : appointments) {
-        if (*a->getDoctor() == doctor) count++;
-    }
+    int cancelled = 0;
     for (int i = appointments.getCount() - 1; i >= 0; i--) {
-        if (*appointments.get(i)->getDoctor() == doctor) appointments.removeAt(i);
+        if (*appointments.get(i)->getDoctor() == doctor) {
+            appointments.removeAt(i);
+            cancelled++;
+        }
     }
-    return count;
+    return cancelled;
 }
 
 int Filial::cancelAppointmentsOfPatient(const Patient& patient) {
-    int count = 0;
-    for (const auto& a : appointments) {
-        if (*a->getPatient() == patient) count++;
-    }
+    int cancelled = 0;
     for (int i = appointments.getCount() - 1; i >= 0; i--) {
-        if (*appointments.get(i)->getPatient() == patient) appointments.removeAt(i);
+        if (*appointments.get(i)->getPatient() == patient) {
+            appointments.removeAt(i);
+            cancelled++;
+        }
     }
-    return count;
+    return cancelled;
 }
 
 int Filial::cancelAppointmentsOfService(const Service& service) {
-    int count = 0;
-    for (const auto& a : appointments) {
-        if (*a->getService() == service) count++;
-    }
+    int cancelled = 0;
     for (int i = appointments.getCount() - 1; i >= 0; i--) {
-        if (*appointments.get(i)->getService() == service) appointments.removeAt(i);
+        if (*appointments.get(i)->getService() == service) {
+            appointments.removeAt(i);
+            cancelled++;
+        }
     }
-    return count;
+    return cancelled;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Doctor> doctor) {
@@ -175,8 +184,8 @@ Filial& Filial::operator+=(std::shared_ptr<Appointment> appointment) {
     if (!appointment->hasValidDateTime()) { printBadDateTimeError(); return *this; }
     if (!appointment->fitsWorkingHours()) { printOutsideWorkingHoursError(); return *this; }
     if (indexOfAppointment(appointment) >= 0) { printDuplicateError(name, appointment->getEntityType()); return *this; }
-    if (isDoctorBusy(*appointment)) { printBusyError(appointment->getDoctor()->getEntityType()); return *this; }
-    if (isPatientBusy(*appointment)) { printBusyError(appointment->getPatient()->getEntityType()); return *this; }
+    if (isDoctorBusy(*appointment)) { printBusyError(appointment->getDoctor()->getEntityType(), appointment->getDoctor()->getName()); return *this; }
+    if (isPatientBusy(*appointment)) { printBusyError(appointment->getPatient()->getEntityType(), appointment->getPatient()->getName()); return *this; }
     if (!hasSpaceForAppointment()) { printCapacityError(name, appointment->getEntityType()); return *this; }
     appointments.add(appointment);
     return *this;
@@ -184,9 +193,9 @@ Filial& Filial::operator+=(std::shared_ptr<Appointment> appointment) {
 
 Filial& Filial::operator-=(std::shared_ptr<Doctor> doctor) {
     if (!doctor) { printNullObjectError(name, "Doctor"); return *this; }
-    int idx = indexOfDoctor(doctor);
-    if (idx < 0) { printNotFoundError(name, doctor->getEntityType()); return *this; }
-    doctors.removeAt(idx);
+    int index = indexOfDoctor(doctor);
+    if (index < 0) { printNotFoundError(name, doctor->getEntityType()); return *this; }
+    doctors.removeAt(index);
     int cancelled = cancelAppointmentsOfDoctor(*doctor);
     if (cancelled > 0) printCancelledInfo(name, cancelled, doctor->getEntityType());
     return *this;
@@ -194,9 +203,9 @@ Filial& Filial::operator-=(std::shared_ptr<Doctor> doctor) {
 
 Filial& Filial::operator-=(std::shared_ptr<Service> service) {
     if (!service) { printNullObjectError(name, "Service"); return *this; }
-    int idx = indexOfService(service);
-    if (idx < 0) { printNotFoundError(name, service->getEntityType()); return *this; }
-    services.removeAt(idx);
+    int index = indexOfService(service);
+    if (index < 0) { printNotFoundError(name, service->getEntityType()); return *this; }
+    services.removeAt(index);
     int cancelled = cancelAppointmentsOfService(*service);
     if (cancelled > 0) printCancelledInfo(name, cancelled, service->getEntityType());
     return *this;
@@ -204,9 +213,9 @@ Filial& Filial::operator-=(std::shared_ptr<Service> service) {
 
 Filial& Filial::operator-=(std::shared_ptr<Patient> patient) {
     if (!patient) { printNullObjectError(name, "Patient"); return *this; }
-    int idx = indexOfPatient(patient);
-    if (idx < 0) { printNotFoundError(name, patient->getEntityType()); return *this; }
-    patients.removeAt(idx);
+    int index = indexOfPatient(patient);
+    if (index < 0) { printNotFoundError(name, patient->getEntityType()); return *this; }
+    patients.removeAt(index);
     int cancelled = cancelAppointmentsOfPatient(*patient);
     if (cancelled > 0) printCancelledInfo(name, cancelled, patient->getEntityType());
     return *this;
@@ -214,17 +223,17 @@ Filial& Filial::operator-=(std::shared_ptr<Patient> patient) {
 
 Filial& Filial::operator-=(std::shared_ptr<Administrator> administrator) {
     if (!administrator) { printNullObjectError(name, "Administrator"); return *this; }
-    int idx = indexOfAdministrator(administrator);
-    if (idx < 0) { printNotFoundError(name, administrator->getEntityType()); return *this; }
-    administrators.removeAt(idx);
+    int index = indexOfAdministrator(administrator);
+    if (index < 0) { printNotFoundError(name, administrator->getEntityType()); return *this; }
+    administrators.removeAt(index);
     return *this;
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Appointment> appointment) {
     if (!appointment) { printNullObjectError(name, "Appointment"); return *this; }
-    int idx = indexOfAppointment(appointment);
-    if (idx < 0) { printNotFoundError(name, appointment->getEntityType()); return *this; }
-    appointments.removeAt(idx);
+    int index = indexOfAppointment(appointment);
+    if (index < 0) { printNotFoundError(name, appointment->getEntityType()); return *this; }
+    appointments.removeAt(index);
     return *this;
 }
 

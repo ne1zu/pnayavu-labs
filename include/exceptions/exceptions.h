@@ -1,0 +1,13 @@
+#pragma once
+#include "clinic_exception.h"
+#include "invalid_data_exception.h"
+#include "invalid_date_time_exception.h"
+#include "null_object_exception.h"
+#include "duplicate_object_exception.h"
+#include "object_not_found_exception.h"
+#include "capacity_exceeded_exception.h"
+#include "link_violation_exception.h"
+#include "working_hours_exception.h"
+#include "schedule_conflict_exception.h"
+#include "invalid_operation_exception.h"
+#include "index_out_of_range_exception.h"

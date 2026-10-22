@@ -3,7 +3,8 @@
 #include <memory>
 #include <string>
 #include <iostream>
-#include <stdexcept>
+#include "exceptions/null_object_exception.h"
+#include "exceptions/index_out_of_range_exception.h"
 
 template <typename T>
 class Collection {
@@ -17,7 +18,7 @@ public:
 
     Collection() = default;
 
-    bool add(std::shared_ptr<T> item);
+    void add(std::shared_ptr<T> item);
     bool removeAt(int index);
     bool remove(const T& value);
 

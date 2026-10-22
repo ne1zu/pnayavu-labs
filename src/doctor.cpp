@@ -1,9 +1,11 @@
 #include "doctor.h"
+#include "exceptions/invalid_data_exception.h"
 
 int Doctor::counter = 0;
 
-Doctor::Doctor(std::string_view name, std::string_view specialty, int experience)
-    : Person(name, counter), specialty(specialty), experience(experience < 0 ? 0 : experience) {
+Doctor::Doctor(std::string_view name, std::string_view specialty, int experienceValue)
+    : Person(name, counter), specialty(specialty), experience(0) {
+    setExperience(experienceValue);
 }
 
 std::string Doctor::getSpecialty() const { return specialty; }
@@ -12,8 +14,7 @@ int Doctor::getExperience() const { return experience; }
 void Doctor::setSpecialty(std::string_view specialtyValue) { specialty = specialtyValue; }
 void Doctor::setExperience(int expValue) {
     if (expValue < 0) {
-        std::cout << "[ERROR] Invalid experience!\n";
-        return;
+        throw InvalidDataException("experience", "must not be negative, got " + std::to_string(expValue));
     }
     experience = expValue;
 }
@@ -38,15 +39,23 @@ std::string Doctor::classify() const {
 
 std::istream& operator>>(std::istream& is, Doctor& doc) {
     std::string nameValue;
+    std::string specialtyValue;
+    int experienceValue = 0;
+
     std::cout << "Enter Doctor Name: ";
     std::getline(is >> std::ws, nameValue);
-    doc.setName(nameValue);
 
     std::cout << "Enter Specialty: ";
-    std::getline(is >> std::ws, doc.specialty);
+    std::getline(is >> std::ws, specialtyValue);
 
     std::cout << "Enter Experience (years): ";
-    is >> doc.experience;
-    if (doc.experience < 0) doc.experience = 0;
+    is >> experienceValue;
+    if (!is) return is;
+
+    Doctor updated(doc);
+    updated.setName(nameValue);
+    updated.setSpecialty(specialtyValue);
+    updated.setExperience(experienceValue);
+    doc = updated;
     return is;
 }

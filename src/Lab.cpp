@@ -12,6 +12,7 @@
 #include "person.h"
 #include "collection.h"
 #include "appointment.h"
+#include "exceptions/exceptions.h"
 
 using namespace std;
 
@@ -134,16 +135,13 @@ void createAndStore(vector<shared_ptr<T>>& list) {
     cin >> candidate;
     if (!cin) {
         discardRestOfLine();
-        cout << "[ERROR] Invalid input, object was not created.\n";
-        return;
+        throw InvalidDataException("input", "a number was expected, the object was not created");
     }
     if (candidate.getName().empty()) {
-        cout << "[ERROR] Name must not be empty.\n";
-        return;
+        throw InvalidDataException("name", "must not be empty");
     }
     if (findEqual(list, candidate)) {
-        cout << "[ERROR] Such object already exists.\n";
-        return;
+        throw DuplicateObjectException("Clinic data", candidate.getEntityType());
     }
     list.push_back(make_shared<T>(candidate));
     cout << "[OK] Object created.\n";
@@ -306,24 +304,21 @@ void bookAppointment(ClinicData& data) {
     cout << "Enter date (day month year): ";
     if (!readInt(day) || !readInt(month) || !readInt(year)) return;
     if (!Appointment::isValidDate(day, month, year)) {
-        cout << "[ERROR] Invalid date.\n";
-        return;
+        throw InvalidDateTimeException("date " + to_string(day) + "." + to_string(month) + "." + to_string(year)
+            + " does not exist");
     }
     cout << "Enter start time (hour minute): ";
     if (!readInt(hour) || !readInt(minute)) return;
     if (!Appointment::isValidTime(hour, minute)) {
-        cout << "[ERROR] Invalid time.\n";
-        return;
+        throw InvalidDateTimeException("time " + to_string(hour) + ":" + (minute >= 0 && minute < 10 ? "0" : "")
+            + to_string(minute) + " does not exist");
     }
 
     shared_ptr<Appointment> appointment = make_shared<Appointment>(
         patient, doctor, service, filial->getName(), day, month, year, hour, minute);
 
-    int countBefore = filial->getAppointmentCount();
     *filial += appointment;
-    if (filial->getAppointmentCount() > countBefore) {
-        cout << "[OK] Booked: " << *appointment << "\n";
-    }
+    cout << "[OK] Booked: " << *appointment << "\n";
 }
 
 void showAppointments(ClinicData& data) {
@@ -377,11 +372,8 @@ void cancelAppointment(ClinicData& data) {
     shared_ptr<Appointment> appointment = pickFromCollection("Appointment", filial->getAppointments());
     if (!appointment) return;
 
-    int countBefore = filial->getAppointmentCount();
     *filial -= appointment;
-    if (filial->getAppointmentCount() < countBefore) {
-        cout << "[OK] Appointment cancelled.\n";
-    }
+    cout << "[OK] Appointment cancelled.\n";
 }
 
 void demoAddAndSize() {
@@ -392,7 +384,14 @@ void demoAddAndSize() {
     cout << "Calling add()... Adding 2 temporary doctors.\n";
     demoDocs.add(make_shared<Doctor>("Andrei Ivanov", "Therapist", 5));
     demoDocs.add(make_shared<Doctor>("Sergei Krug", "Surgeon", 10));
-    cout << "Calling add(nullptr). -> " << (demoDocs.add(nullptr) ? "added" : "rejected") << "\n";
+    cout << "Calling add(nullptr). -> ";
+    try {
+        demoDocs.add(nullptr);
+        cout << "added\n";
+    }
+    catch (const NullObjectException& error) {
+        cout << "Exception safely caught! (" << error.what() << ")\n";
+    }
 
     cout << "Calling isEmpty()... -> " << (demoDocs.isEmpty() ? "True" : "False") << "\n";
     cout << "Calling getCount().. -> " << demoDocs.getCount() << "\n";
@@ -417,7 +416,7 @@ void demoAccessAndSearch(const Filial& filial) {
         docs.at(100);
         cout << "found\n";
     }
-    catch (const out_of_range& error) {
+    catch (const IndexOutOfRangeException& error) {
         cout << "Exception safely caught! (" << error.what() << ")\n";
     }
 
@@ -497,7 +496,7 @@ void demoDomainIndependence() {
     Collection<string> words;
     words.add(make_shared<string>("apple"));
     words.add(make_shared<string>("banana"));
-    words.add(make_shared<string>("passionfruit"));
+    words.add(make_shared<string>("fig"));
 
     cout << "Collection<int> numbers:\n";
     numbers.print(cout, "  ");
@@ -531,6 +530,428 @@ void runCollectionDemo(ClinicData& data) {
         else if (choice == 3) demoRemoval(*filial);
         else if (choice == 4) demoAlgorithms(*filial);
         else if (choice == 5) demoDomainIndependence();
+        else if (choice != 0 && choice != -1) cout << "[ERROR] Unknown option.\n";
+    }
+}
+
+struct DemoWorld {
+    shared_ptr<Doctor> doctor;
+    shared_ptr<Patient> patient;
+    shared_ptr<Service> service;
+    Filial filial;
+
+    DemoWorld()
+        : doctor(make_shared<Doctor>("Demo Doctor", "Therapist", 7)),
+        patient(make_shared<Patient>("Demo Patient", 30, "+375290000999")),
+        service(make_shared<Service>("Demo Checkup", 30.0f, 30)),
+        filial("Demo Branch", "Test st 1", 1, 1, 1, 1, 3) {
+        filial += doctor;
+        filial += service;
+        filial += patient;
+    }
+
+    shared_ptr<Appointment> makeAppointment(int day, int month, int year, int hour, int minute) const {
+        return make_shared<Appointment>(patient, doctor, service, filial.getName(), day, month, year, hour, minute);
+    }
+};
+
+class TraceGuard {
+private:
+    string label;
+
+public:
+    explicit TraceGuard(const string& text) : label(text) {
+        cout << "  [enter] " << label << "\n";
+    }
+    ~TraceGuard() {
+        cout << "  [leave] " << label << " (destructor called)\n";
+    }
+    TraceGuard(const TraceGuard&) = delete;
+    TraceGuard& operator=(const TraceGuard&) = delete;
+};
+
+string describeDemoWorld() {
+    return "Demo Branch (limits: doctors 1, services 1, patients 1, administrators 1, appointments 3); "
+        "registered: Doctor 'Demo Doctor', Service 'Demo Checkup' (30 min), Patient 'Demo Patient'";
+}
+
+void printScenarioHeader(int number, const string& exceptionName, const string& situation) {
+    cout << "\n==================================================\n";
+    cout << number << ". " << exceptionName << "\n";
+    cout << "Situation:  " << situation << "\n";
+}
+
+void printCaught(const string& typeName, const exception& error) {
+    cout << "Result:     exception " << typeName << " was thrown and caught\n";
+    cout << "Message:    " << error.what() << "\n";
+}
+
+void printContinues() {
+    cout << "The program continues to work.\n";
+}
+
+void printNoError() {
+    cout << "Result:     no exception (unexpected)\n";
+}
+
+void scenarioInvalidData() {
+    printScenarioHeader(1, "InvalidDataException", "a setter receives an incorrect value");
+    Doctor doctor("Test Doctor", "Therapist", 3);
+    cout << "Test data:  Doctor 'Test Doctor', experience 3; new experience = -5\n";
+    cout << "Action:     doctor.setExperience(-5)\n";
+    try {
+        doctor.setExperience(-5);
+        printNoError();
+    }
+    catch (const InvalidDataException& error) {
+        printCaught("InvalidDataException (field '" + error.getField() + "')", error);
+        cout << "Object:     experience is still " << doctor.getExperience() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioConstructor() {
+    printScenarioHeader(2, "InvalidDataException (constructor)", "an object is created with incorrect data");
+    cout << "Test data:  Filial('Broken Branch', 'Nowhere', doctorCapacity = -1)\n";
+    cout << "Action:     creating the branch object\n";
+    try {
+        Filial broken("Broken Branch", "Nowhere", -1);
+        printNoError();
+    }
+    catch (const InvalidDataException& error) {
+        printCaught("InvalidDataException (field '" + error.getField() + "')", error);
+        cout << "Object:     the branch was never created\n";
+        printContinues();
+    }
+   
+}
+
+void scenarioInvalidDateTime() {
+    printScenarioHeader(3, "InvalidDateTimeException", "an appointment is booked on a date that does not exist");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  patient 'Demo Patient', doctor 'Demo Doctor', service 'Demo Checkup', date 31.02.2026, time 10:00\n";
+    cout << "Action:     filial += appointment\n";
+    try {
+        world.filial += world.makeAppointment(31, 2, 2026, 10, 0);
+        printNoError();
+    }
+    catch (const InvalidDateTimeException& error) {
+        printCaught("InvalidDateTimeException", error);
+        cout << "Branch:     appointments " << world.filial.getAppointmentCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioNullObject() {
+    printScenarioHeader(4, "NullObjectException", "an empty pointer is passed instead of an object");
+    DemoWorld world;
+    shared_ptr<Doctor> nobody;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  an empty shared_ptr<Doctor> (points to nothing)\n";
+    cout << "Action:     filial += nobody\n";
+    try {
+        world.filial += nobody;
+        printNoError();
+    }
+    catch (const NullObjectException& error) {
+        printCaught("NullObjectException (" + error.getObjectType() + ")", error);
+        cout << "Branch:     doctors " << world.filial.getDoctorCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioDuplicate() {
+    printScenarioHeader(5, "DuplicateObjectException", "an object that is already in the branch is added again");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  Doctor 'Demo Doctor' (already registered)\n";
+    cout << "Action:     filial += doctor\n";
+    try {
+        world.filial += world.doctor;
+        printNoError();
+    }
+    catch (const DuplicateObjectException& error) {
+        printCaught("DuplicateObjectException (" + error.getObjectType() + ")", error);
+        cout << "Branch:     doctors " << world.filial.getDoctorCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioNotFound() {
+    printScenarioHeader(6, "ObjectNotFoundException", "an object that is not in the branch is removed");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  Doctor 'Stranger Doctor' (never added to the branch)\n";
+    cout << "Action:     filial -= doctor\n";
+    try {
+        world.filial -= make_shared<Doctor>("Stranger Doctor", "Surgeon", 3);
+        printNoError();
+    }
+    catch (const ObjectNotFoundException& error) {
+        printCaught("ObjectNotFoundException (" + error.getObjectType() + ")", error);
+        cout << "Branch:     doctors " << world.filial.getDoctorCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioCapacity() {
+    printScenarioHeader(7, "CapacityExceededException", "the limit of objects in the branch is exceeded");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  second doctor 'Second Doctor' (the branch holds only 1 doctor)\n";
+    cout << "Before:     doctors " << world.filial.getDoctorCount() << "\n";
+    cout << "Action:     filial += doctor\n";
+    try {
+        world.filial += make_shared<Doctor>("Second Doctor", "Surgeon", 4);
+        printNoError();
+    }
+    catch (const CapacityExceededException& error) {
+        printCaught("CapacityExceededException (limit " + to_string(error.getCapacity()) + ")", error);
+        cout << "After:      doctors " << world.filial.getDoctorCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioLinkViolation() {
+    printScenarioHeader(8, "LinkViolationException", "an appointment is linked to an object that is not registered in the branch");
+    DemoWorld world;
+    shared_ptr<Patient> stranger = make_shared<Patient>("Stranger Patient", 40, "+375290000777");
+    shared_ptr<Appointment> appointment = make_shared<Appointment>(
+        stranger, world.doctor, world.service, world.filial.getName(), 15, 3, 2026, 10, 0);
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  Patient 'Stranger Patient' (not registered), Doctor 'Demo Doctor', Service 'Demo Checkup', 15.03.2026 10:00\n";
+    cout << "Action:     filial += appointment\n";
+    try {
+        world.filial += appointment;
+        printNoError();
+    }
+    catch (const LinkViolationException& error) {
+        printCaught("LinkViolationException", error);
+        cout << "Branch:     appointments " << world.filial.getAppointmentCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioWorkingHours() {
+    printScenarioHeader(9, "WorkingHoursException", "an appointment starts before the clinic opens");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  15.03.2026, start 07:30, service length 30 min, clinic works 08:00-20:00\n";
+    cout << "Action:     filial += appointment\n";
+    try {
+        world.filial += world.makeAppointment(15, 3, 2026, 7, 30);
+        printNoError();
+    }
+    catch (const WorkingHoursException& error) {
+        printCaught("WorkingHoursException (working hours " + error.getWorkingHours() + ")", error);
+        cout << "Branch:     appointments " << world.filial.getAppointmentCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioScheduleConflict() {
+    printScenarioHeader(10, "ScheduleConflictException", "the doctor is already busy at the requested time");
+    DemoWorld world;
+    cout << "Branch:     " << describeDemoWorld() << "\n";
+    cout << "Test data:  first appointment 15.03.2026 10:00-10:30, second appointment 15.03.2026 10:15 (same doctor)\n";
+    cout << "Action 1:   filial += appointment at 10:00\n";
+    world.filial += world.makeAppointment(15, 3, 2026, 10, 0);
+    cout << "            booked, appointments: " << world.filial.getAppointmentCount() << "\n";
+    cout << "Action 2:   filial += appointment at 10:15\n";
+    try {
+        world.filial += world.makeAppointment(15, 3, 2026, 10, 15);
+        printNoError();
+    }
+    catch (const ScheduleConflictException& error) {
+        printCaught("ScheduleConflictException (" + error.getPersonType() + " '" + error.getPersonName() + "')", error);
+        cout << "Branch:     appointments " << world.filial.getAppointmentCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioInvalidOperation() {
+    printScenarioHeader(11, "InvalidOperationException", "an operation is not allowed in the current state of the branch");
+    DemoWorld world;
+    Filial empty("Empty Branch", "Nowhere", 1, 1, 1, 1, 1);
+    cout << "Branch:     Empty Branch (no doctors at all)\n";
+    cout << "Test data:  Patient 'Demo Patient'\n";
+    cout << "Action:     emptyBranch += patient\n";
+    try {
+        empty += world.patient;
+        printNoError();
+    }
+    catch (const InvalidOperationException& error) {
+        printCaught("InvalidOperationException (operation '" + error.getOperation() + "')", error);
+        cout << "Branch:     patients " << empty.getPatientCount() << " (unchanged)\n";
+        printContinues();
+    }
+}
+
+void scenarioIndexOutOfRange() {
+    printScenarioHeader(12, "IndexOutOfRangeException", "an element is requested outside the allowed range");
+    DemoWorld world;
+    Collection<Doctor> doctors = world.filial.getDoctors();
+    cout << "Collection: list of doctors of the Demo Branch, size " << doctors.getCount() << "\n";
+    cout << "Test data:  index 5\n";
+    cout << "Action:     doctors.at(5)\n";
+    try {
+        doctors.at(5);
+        printNoError();
+    }
+    catch (const IndexOutOfRangeException& error) {
+        printCaught("IndexOutOfRangeException (index " + to_string(error.getIndex())
+            + ", size " + to_string(error.getSize()) + ")", error);
+        printContinues();
+    }
+}
+
+void demoOwnExceptions() {
+    cout << "\n--- ALL own exceptions, one after another ---\n";
+    scenarioInvalidData();
+    scenarioConstructor();
+    scenarioInvalidDateTime();
+    scenarioNullObject();
+    scenarioDuplicate();
+    scenarioNotFound();
+    scenarioCapacity();
+    scenarioLinkViolation();
+    scenarioWorkingHours();
+    scenarioScheduleConflict();
+    scenarioInvalidOperation();
+    scenarioIndexOutOfRange();
+    cout << "\n--- All 12 situations were handled, the program did not stop ---\n";
+}
+
+void throwByNumber(int number) {
+    if (number == 1) throw InvalidDateTimeException("'31.02.2026 10:00' is not a valid date and time");
+    if (number == 2) throw InvalidDataException("age", "must not be negative, got -1");
+    if (number == 3) throw ObjectNotFoundException("Branch 'Demo'", "Doctor");
+    if (number == 4) throw IndexOutOfRangeException(7, 3);
+    if (number == 5) throw runtime_error("an error from the standard library");
+    if (number == 6) throw 42;
+}
+
+void demoCatchOrder() {
+    cout << "\n--- One try block, several catch blocks (derived classes first, catch(...) last) ---\n";
+    for (int number = 1; number <= 6; number++) {
+        cout << number << ". ";
+        try {
+            throwByNumber(number);
+        }
+        catch (const InvalidDateTimeException& error) {
+            cout << "handler InvalidDateTimeException: " << error.what() << "\n";
+        }
+        catch (const InvalidDataException& error) {
+            cout << "handler InvalidDataException (base of InvalidDateTimeException): " << error.what() << "\n";
+        }
+        catch (const ClinicException& error) {
+            cout << "handler ClinicException (common base of all own exceptions): " << error.what() << "\n";
+        }
+        catch (const exception& error) {
+            cout << "handler std::exception: " << error.what() << "\n";
+        }
+        catch (...) {
+            cout << "handler catch(...): an exception of an unknown type\n";
+        }
+    }
+}
+
+void unwindLevelThree() {
+    TraceGuard guard("level 3");
+    Collection<Doctor> doctors;
+    cout << "  level 3 asks for doctor number 0 of an empty collection\n";
+    doctors.at(0);
+    cout << "  this line is never reached\n";
+}
+
+void unwindLevelTwo() {
+    TraceGuard guard("level 2");
+    unwindLevelThree();
+    cout << "  this line is never reached\n";
+}
+
+void unwindLevelOne() {
+    TraceGuard guard("level 1");
+    unwindLevelTwo();
+    cout << "  this line is never reached\n";
+}
+
+void demoStackUnwinding() {
+    cout << "\n--- Stack unwinding: local objects are destroyed while the exception travels up ---\n";
+    try {
+        unwindLevelOne();
+    }
+    catch (const IndexOutOfRangeException& error) {
+        cout << "  Caught at the top: " << error.what() << "\n";
+    }
+    cout << "  The program continues normally.\n";
+}
+
+void demoRethrowAndState() {
+    cout << "\n--- Rethrow with 'throw;' and the state of the object after an error ---\n";
+    DemoWorld world;
+    cout << "Patients before: " << world.filial.getPatientCount() << "\n";
+    try {
+        try {
+            world.filial += world.patient;
+        }
+        catch (const DuplicateObjectException& error) {
+            cout << "Inner handler logs: " << error.what() << "\n";
+            cout << "Inner handler cannot fix it and passes it up with 'throw;'\n";
+            throw;
+        }
+    }
+    catch (const ClinicException& error) {
+        cout << "Outer handler received the same exception: " << error.what() << "\n";
+    }
+    cout << "Patients after: " << world.filial.getPatientCount() << " (the failed operation changed nothing)\n";
+    cout << world.filial;
+}
+
+void printExceptionsDemoMenu() {
+    cout << "\n=== EXCEPTIONS DEMO MENU ===\n";
+    cout << " 1. InvalidDataException         - setter gets a negative value\n";
+    cout << " 2. InvalidDataException         - constructor gets incorrect data\n";
+    cout << " 3. InvalidDateTimeException     - appointment on 31.02.2026\n";
+    cout << " 4. NullObjectException          - empty pointer instead of an object\n";
+    cout << " 5. DuplicateObjectException     - the same doctor added twice\n";
+    cout << " 6. ObjectNotFoundException      - removing a doctor that is not in the branch\n";
+    cout << " 7. CapacityExceededException    - second doctor in a branch with limit 1\n";
+    cout << " 8. LinkViolationException       - appointment for an unregistered patient\n";
+    cout << " 9. WorkingHoursException        - appointment at 07:30\n";
+    cout << "10. ScheduleConflictException    - doctor is busy at 10:15\n";
+    cout << "11. InvalidOperationException    - patient added to a branch without doctors\n";
+    cout << "12. IndexOutOfRangeException     - Collection::at(5)\n";
+    cout << "13. RUN ALL 12 situations\n";
+    cout << "14. Several catch blocks and catch(...), order of handlers\n";
+    cout << "15. Stack unwinding (destructors of local objects)\n";
+    cout << "16. Rethrow with throw; and object state after an error\n";
+    cout << " 0. Go back\nChoice: ";
+}
+
+void runExceptionsDemo() {
+    int choice = -1;
+    while (choice != 0) {
+        printExceptionsDemoMenu();
+        choice = readMenuChoice();
+
+        if (choice == 1) scenarioInvalidData();
+        else if (choice == 2) scenarioConstructor();
+        else if (choice == 3) scenarioInvalidDateTime();
+        else if (choice == 4) scenarioNullObject();
+        else if (choice == 5) scenarioDuplicate();
+        else if (choice == 6) scenarioNotFound();
+        else if (choice == 7) scenarioCapacity();
+        else if (choice == 8) scenarioLinkViolation();
+        else if (choice == 9) scenarioWorkingHours();
+        else if (choice == 10) scenarioScheduleConflict();
+        else if (choice == 11) scenarioInvalidOperation();
+        else if (choice == 12) scenarioIndexOutOfRange();
+        else if (choice == 13) demoOwnExceptions();
+        else if (choice == 14) demoCatchOrder();
+        else if (choice == 15) demoStackUnwinding();
+        else if (choice == 16) demoRethrowAndState();
         else if (choice != 0 && choice != -1) cout << "[ERROR] Unknown option.\n";
     }
 }
@@ -593,45 +1014,111 @@ void printMainMenu() {
     cout << "\n1. View Branches\n2. View Doctors\n3. View Services\n4. View Patients\n5. View Admins\n"
         << "6. Create Object\n7. Assign Object\n8. Remove Object\n9. Compare\n10. Delete Object\n"
         << "11. Check Service\n12. Find Admin\n13. Polymorphic Overview\n14. Book Appt\n15. View Appts\n"
-        << "16. Cancel Appt\n17. Collection Demo\n0. Exit\nChoice: ";
+        << "16. Cancel Appt\n17. Collection Demo\n18. Exceptions Demo\n0. Exit\nChoice: ";
+}
+
+void executeMenuChoice(ClinicData& data, int choice) {
+    switch (choice) {
+    case 1:
+        for (const auto& filial : data.filials) cout << *filial;
+        break;
+    case 2: printAll(data.doctors); break;
+    case 3: printAll(data.services); break;
+    case 4: printAll(data.patients); break;
+    case 5: printAll(data.administrators); break;
+    case 6: createObject(data); break;
+    case 7: assignObject(data); break;
+    case 8: removeObjectFromFilial(data); break;
+    case 9: compareObjects(data); break;
+    case 10: deleteObject(data); break;
+    case 11: checkServiceAvailability(data); break;
+    case 12: findAdministrator(data); break;
+    case 13: showPolymorphicOverview(data); break;
+    case 14: bookAppointment(data); break;
+    case 15: showAppointments(data); break;
+    case 16: cancelAppointment(data); break;
+    case 17: runCollectionDemo(data); break;
+    case 18: runExceptionsDemo(); break;
+    case 0:
+    case -1:
+        break;
+    default:
+        cout << "[ERROR] Unknown menu item.\n";
+        break;
+    }
+}
+
+void runMenuSafely(ClinicData& data, int choice) {
+    try {
+        executeMenuChoice(data, choice);
+    }
+    catch (const InvalidDateTimeException& error) {
+        cout << "[INVALID DATE/TIME] " << error.what() << "\n"
+            << "Hint: enter the date as 'day month year' and the time as 'hour minute'.\n";
+    }
+    catch (const InvalidDataException& error) {
+        cout << "[INVALID DATA] " << error.what() << "\n"
+            << "Nothing was changed. Check the field '" << error.getField() << "' and try again.\n";
+    }
+    catch (const NullObjectException& error) {
+        cout << "[EMPTY OBJECT] " << error.what() << "\n"
+            << "The operation was skipped.\n";
+    }
+    catch (const DuplicateObjectException& error) {
+        cout << "[DUPLICATE] " << error.what() << "\n"
+            << "Choose another " << error.getObjectType() << ".\n";
+    }
+    catch (const ObjectNotFoundException& error) {
+        cout << "[NOT FOUND] " << error.what() << "\n"
+            << "Look at the content of the branch with menu item 1.\n";
+    }
+    catch (const CapacityExceededException& error) {
+        cout << "[CAPACITY] " << error.what() << "\n"
+            << "Remove a " << error.getObjectType() << " from the branch (menu item 8) or use another branch.\n";
+    }
+    catch (const LinkViolationException& error) {
+        cout << "[BROKEN LINK] " << error.what() << "\n"
+            << "Assign the missing object to the branch first (menu item 7).\n";
+    }
+    catch (const WorkingHoursException& error) {
+        cout << "[WORKING HOURS] " << error.what() << "\n"
+            << "Choose an earlier start or a shorter service.\n";
+    }
+    catch (const ScheduleConflictException& error) {
+        cout << "[SCHEDULE CONFLICT] " << error.what() << "\n"
+            << "Choose another time or another " << error.getPersonType() << ".\n";
+    }
+    catch (const InvalidOperationException& error) {
+        cout << "[NOT ALLOWED] " << error.what() << "\n";
+    }
+    catch (const IndexOutOfRangeException& error) {
+        cout << "[INDEX] " << error.what() << "\n";
+    }
+    catch (const ClinicException& error) {
+        cout << "[CLINIC ERROR] " << error.what() << "\n";
+    }
+    catch (const exception& error) {
+        cout << "[SYSTEM ERROR] " << error.what() << "\n";
+    }
+    catch (...) {
+        cout << "[UNKNOWN ERROR] An unexpected error was caught, the program continues.\n";
+    }
 }
 
 int main() {
     ClinicData data;
-    fillDemoData(data);
+    try {
+        fillDemoData(data);
+    }
+    catch (const ClinicException& error) {
+        cout << "[ERROR] Start data was not loaded completely: " << error.what() << "\n";
+    }
 
     int mainChoice = -1;
     while (mainChoice != 0) {
         printMainMenu();
         mainChoice = readMenuChoice();
-
-        switch (mainChoice) {
-        case 1:
-            for (const auto& filial : data.filials) cout << *filial;
-            break;
-        case 2: printAll(data.doctors); break;
-        case 3: printAll(data.services); break;
-        case 4: printAll(data.patients); break;
-        case 5: printAll(data.administrators); break;
-        case 6: createObject(data); break;
-        case 7: assignObject(data); break;
-        case 8: removeObjectFromFilial(data); break;
-        case 9: compareObjects(data); break;
-        case 10: deleteObject(data); break;
-        case 11: checkServiceAvailability(data); break;
-        case 12: findAdministrator(data); break;
-        case 13: showPolymorphicOverview(data); break;
-        case 14: bookAppointment(data); break;
-        case 15: showAppointments(data); break;
-        case 16: cancelAppointment(data); break;
-        case 17: runCollectionDemo(data); break;
-        case 0:
-        case -1:
-            break;
-        default:
-            cout << "[ERROR] Unknown menu item.\n";
-            break;
-        }
+        runMenuSafely(data, mainChoice);
     }
     return 0;
 }

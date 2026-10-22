@@ -9,10 +9,9 @@ bool Collection<T>::isValidIndex(int index) const {
 }
 
 template <typename T>
-bool Collection<T>::add(std::shared_ptr<T> item) {
-    if (!item) return false;
+void Collection<T>::add(std::shared_ptr<T> item) {
+    if (!item) throw NullObjectException("Collection::add", "item");
     items.push_back(item);
-    return true;
 }
 
 template <typename T>
@@ -58,8 +57,7 @@ std::shared_ptr<T> Collection<T>::get(int index) const {
 template <typename T>
 std::shared_ptr<T> Collection<T>::at(int index) const {
     if (!isValidIndex(index)) {
-        throw std::out_of_range("Collection::at: index " + std::to_string(index) +
-            " is out of range, size is " + std::to_string(items.size()));
+        throw IndexOutOfRangeException(index, static_cast<int>(items.size()));
     }
     return items[index];
 }

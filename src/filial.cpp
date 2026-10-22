@@ -1,42 +1,35 @@
 #include "filial.h"
+#include <sstream>
+#include <iomanip>
+#include "exceptions/exceptions.h"
 
 namespace {
-    void printNullObjectError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Branch '" << filialName << "': " << objectType << " is null.\n";
+    std::string branchLabel(const std::string& branchName) {
+        return "Branch '" + branchName + "'";
     }
-    void printDuplicateError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Branch '" << filialName << "': this " << objectType << " is already added.\n";
+
+    std::string formatClock(int totalMinutes) {
+        std::ostringstream out;
+        out << std::setfill('0') << std::setw(2) << totalMinutes / 60 << ":" << std::setw(2) << totalMinutes % 60;
+        return out.str();
     }
-    void printCapacityError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Branch '" << filialName << "': capacity for " << objectType << " is full.\n";
+
+    std::string formatRawDateTime(const Appointment& appointment) {
+        std::ostringstream out;
+        out << std::setfill('0')
+            << std::setw(2) << appointment.getDay() << "." << std::setw(2) << appointment.getMonth() << "."
+            << appointment.getYear() << " "
+            << std::setw(2) << appointment.getHour() << ":" << std::setw(2) << appointment.getMinute();
+        return out.str();
     }
-    void printNotFoundError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Branch '" << filialName << "': this " << objectType << " is not found.\n";
+
+    int checkedCapacity(int value, const std::string& kind) {
+        if (value < 0) {
+            throw InvalidDataException(kind + " capacity", "must not be negative, got " + std::to_string(value));
+        }
+        return value;
     }
-    void printNotRegisteredError(const std::string& filialName, const std::string& objectType) {
-        std::cout << "[ERROR] Branch '" << filialName << "': " << objectType << " is not registered at this branch.\n";
-    }
-    void printNoDoctorsError(const std::string& filialName) {
-        std::cout << "[ERROR] Branch '" << filialName << "': add a doctor before adding patients.\n";
-    }
-    void printIncompleteAppointmentError() {
-        std::cout << "[ERROR] Appointment must have a patient, a doctor and a service.\n";
-    }
-    void printForeignAppointmentError(const std::string& filialName, const std::string& otherName) {
-        std::cout << "[ERROR] Appointment belongs to branch '" << otherName
-            << "', not to '" << filialName << "'.\n";
-    }
-    void printBadDateTimeError() {
-        std::cout << "[ERROR] Appointment has an invalid date or time.\n";
-    }
-    void printOutsideWorkingHoursError() {
-        std::cout << "[ERROR] Appointment must fit into working hours "
-            << "08:00-20:00 (including the service length).\n";
-    }
-    void printBusyError(const std::string& objectType, const std::string& personName) {
-        std::cout << "[ERROR] " << objectType << " '" << personName
-            << "' already has an appointment at this time.\n";
-    }
+
     void printCancelledInfo(const std::string& filialName, int count, const std::string& objectType) {
         std::cout << "[INFO] Branch '" << filialName << "': " << count
             << " appointment(s) cancelled because the " << objectType << " was removed.\n";
@@ -47,8 +40,11 @@ Filial::Filial(std::string_view name, std::string_view address,
     int doctorCapacity, int serviceCapacity, int patientCapacity, int administratorCapacity,
     int appointmentCapacity)
     : name(name), address(address),
-    doctorCapacity(doctorCapacity), serviceCapacity(serviceCapacity), patientCapacity(patientCapacity),
-    administratorCapacity(administratorCapacity), appointmentCapacity(appointmentCapacity) {
+    doctorCapacity(checkedCapacity(doctorCapacity, "doctor")),
+    serviceCapacity(checkedCapacity(serviceCapacity, "service")),
+    patientCapacity(checkedCapacity(patientCapacity, "patient")),
+    administratorCapacity(checkedCapacity(administratorCapacity, "administrator")),
+    appointmentCapacity(checkedCapacity(appointmentCapacity, "appointment")) {
 }
 
 std::string Filial::getName() const { return name; }
@@ -142,59 +138,87 @@ int Filial::cancelAppointmentsOfService(const Service& service) {
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Doctor> doctor) {
-    if (!doctor) { printNullObjectError(name, "Doctor"); return *this; }
-    if (indexOfDoctor(doctor) >= 0) { printDuplicateError(name, doctor->getEntityType()); return *this; }
-    if (!hasSpaceForDoctor()) { printCapacityError(name, doctor->getEntityType()); return *this; }
+    if (!doctor) throw NullObjectException(branchLabel(name), "Doctor");
+    if (indexOfDoctor(doctor) >= 0) throw DuplicateObjectException(branchLabel(name), doctor->getEntityType());
+    if (!hasSpaceForDoctor()) throw CapacityExceededException(branchLabel(name), doctor->getEntityType(), doctorCapacity);
     doctors.add(doctor);
     return *this;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Service> service) {
-    if (!service) { printNullObjectError(name, "Service"); return *this; }
-    if (indexOfService(service) >= 0) { printDuplicateError(name, service->getEntityType()); return *this; }
-    if (!hasSpaceForService()) { printCapacityError(name, service->getEntityType()); return *this; }
+    if (!service) throw NullObjectException(branchLabel(name), "Service");
+    if (indexOfService(service) >= 0) throw DuplicateObjectException(branchLabel(name), service->getEntityType());
+    if (!hasSpaceForService()) throw CapacityExceededException(branchLabel(name), service->getEntityType(), serviceCapacity);
     services.add(service);
     return *this;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Patient> patient) {
-    if (!patient) { printNullObjectError(name, "Patient"); return *this; }
-    if (!hasAnyDoctor()) { printNoDoctorsError(name); return *this; }
-    if (indexOfPatient(patient) >= 0) { printDuplicateError(name, patient->getEntityType()); return *this; }
-    if (!hasSpaceForPatient()) { printCapacityError(name, patient->getEntityType()); return *this; }
+    if (!patient) throw NullObjectException(branchLabel(name), "Patient");
+    if (!hasAnyDoctor()) {
+        throw InvalidOperationException(branchLabel(name), "add " + patient->getEntityType(),
+            "add a doctor to the branch first");
+    }
+    if (indexOfPatient(patient) >= 0) throw DuplicateObjectException(branchLabel(name), patient->getEntityType());
+    if (!hasSpaceForPatient()) throw CapacityExceededException(branchLabel(name), patient->getEntityType(), patientCapacity);
     patients.add(patient);
     return *this;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Administrator> administrator) {
-    if (!administrator) { printNullObjectError(name, "Administrator"); return *this; }
-    if (indexOfAdministrator(administrator) >= 0) { printDuplicateError(name, administrator->getEntityType()); return *this; }
-    if (!hasSpaceForAdministrator()) { printCapacityError(name, administrator->getEntityType()); return *this; }
+    if (!administrator) throw NullObjectException(branchLabel(name), "Administrator");
+    if (indexOfAdministrator(administrator) >= 0) throw DuplicateObjectException(branchLabel(name), administrator->getEntityType());
+    if (!hasSpaceForAdministrator()) throw CapacityExceededException(branchLabel(name), administrator->getEntityType(), administratorCapacity);
     administrators.add(administrator);
     return *this;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Appointment> appointment) {
-    if (!appointment) { printNullObjectError(name, "Appointment"); return *this; }
-    if (!appointment->isComplete()) { printIncompleteAppointmentError(); return *this; }
-    if (appointment->getFilialName() != name) { printForeignAppointmentError(name, appointment->getFilialName()); return *this; }
-    if (indexOfPatient(appointment->getPatient()) < 0) { printNotRegisteredError(name, appointment->getPatient()->getEntityType()); return *this; }
-    if (indexOfDoctor(appointment->getDoctor()) < 0) { printNotRegisteredError(name, appointment->getDoctor()->getEntityType()); return *this; }
-    if (indexOfService(appointment->getService()) < 0) { printNotRegisteredError(name, appointment->getService()->getEntityType()); return *this; }
-    if (!appointment->hasValidDateTime()) { printBadDateTimeError(); return *this; }
-    if (!appointment->fitsWorkingHours()) { printOutsideWorkingHoursError(); return *this; }
-    if (indexOfAppointment(appointment) >= 0) { printDuplicateError(name, appointment->getEntityType()); return *this; }
-    if (isDoctorBusy(*appointment)) { printBusyError(appointment->getDoctor()->getEntityType(), appointment->getDoctor()->getName()); return *this; }
-    if (isPatientBusy(*appointment)) { printBusyError(appointment->getPatient()->getEntityType(), appointment->getPatient()->getName()); return *this; }
-    if (!hasSpaceForAppointment()) { printCapacityError(name, appointment->getEntityType()); return *this; }
+    if (!appointment) throw NullObjectException(branchLabel(name), "Appointment");
+    if (!appointment->isComplete()) {
+        throw LinkViolationException(branchLabel(name), "appointment must be linked to a patient, a doctor and a service");
+    }
+    if (appointment->getFilialName() != name) {
+        throw LinkViolationException(branchLabel(name),
+            "appointment belongs to branch '" + appointment->getFilialName() + "', not to this branch");
+    }
+    if (indexOfPatient(appointment->getPatient()) < 0) {
+        throw LinkViolationException(branchLabel(name),
+            "Patient '" + appointment->getPatient()->getName() + "' is not registered at this branch");
+    }
+    if (indexOfDoctor(appointment->getDoctor()) < 0) {
+        throw LinkViolationException(branchLabel(name),
+            "Doctor '" + appointment->getDoctor()->getName() + "' is not registered at this branch");
+    }
+    if (indexOfService(appointment->getService()) < 0) {
+        throw LinkViolationException(branchLabel(name),
+            "Service '" + appointment->getService()->getName() + "' is not registered at this branch");
+    }
+    if (!appointment->hasValidDateTime()) {
+        throw InvalidDateTimeException("'" + formatRawDateTime(*appointment) + "' is not a valid date and time");
+    }
+    if (!appointment->fitsWorkingHours()) {
+        throw WorkingHoursException(appointment->getDateTimeString(),
+            formatClock(Appointment::WORK_START) + "-" + formatClock(Appointment::WORK_END));
+    }
+    if (indexOfAppointment(appointment) >= 0) throw DuplicateObjectException(branchLabel(name), appointment->getEntityType());
+    if (isDoctorBusy(*appointment)) {
+        throw ScheduleConflictException(appointment->getDoctor()->getEntityType(),
+            appointment->getDoctor()->getName(), appointment->getDateTimeString());
+    }
+    if (isPatientBusy(*appointment)) {
+        throw ScheduleConflictException(appointment->getPatient()->getEntityType(),
+            appointment->getPatient()->getName(), appointment->getDateTimeString());
+    }
+    if (!hasSpaceForAppointment()) throw CapacityExceededException(branchLabel(name), appointment->getEntityType(), appointmentCapacity);
     appointments.add(appointment);
     return *this;
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Doctor> doctor) {
-    if (!doctor) { printNullObjectError(name, "Doctor"); return *this; }
+    if (!doctor) throw NullObjectException(branchLabel(name), "Doctor");
     int index = indexOfDoctor(doctor);
-    if (index < 0) { printNotFoundError(name, doctor->getEntityType()); return *this; }
+    if (index < 0) throw ObjectNotFoundException(branchLabel(name), doctor->getEntityType());
     doctors.removeAt(index);
     int cancelled = cancelAppointmentsOfDoctor(*doctor);
     if (cancelled > 0) printCancelledInfo(name, cancelled, doctor->getEntityType());
@@ -202,9 +226,9 @@ Filial& Filial::operator-=(std::shared_ptr<Doctor> doctor) {
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Service> service) {
-    if (!service) { printNullObjectError(name, "Service"); return *this; }
+    if (!service) throw NullObjectException(branchLabel(name), "Service");
     int index = indexOfService(service);
-    if (index < 0) { printNotFoundError(name, service->getEntityType()); return *this; }
+    if (index < 0) throw ObjectNotFoundException(branchLabel(name), service->getEntityType());
     services.removeAt(index);
     int cancelled = cancelAppointmentsOfService(*service);
     if (cancelled > 0) printCancelledInfo(name, cancelled, service->getEntityType());
@@ -212,9 +236,9 @@ Filial& Filial::operator-=(std::shared_ptr<Service> service) {
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Patient> patient) {
-    if (!patient) { printNullObjectError(name, "Patient"); return *this; }
+    if (!patient) throw NullObjectException(branchLabel(name), "Patient");
     int index = indexOfPatient(patient);
-    if (index < 0) { printNotFoundError(name, patient->getEntityType()); return *this; }
+    if (index < 0) throw ObjectNotFoundException(branchLabel(name), patient->getEntityType());
     patients.removeAt(index);
     int cancelled = cancelAppointmentsOfPatient(*patient);
     if (cancelled > 0) printCancelledInfo(name, cancelled, patient->getEntityType());
@@ -222,17 +246,17 @@ Filial& Filial::operator-=(std::shared_ptr<Patient> patient) {
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Administrator> administrator) {
-    if (!administrator) { printNullObjectError(name, "Administrator"); return *this; }
+    if (!administrator) throw NullObjectException(branchLabel(name), "Administrator");
     int index = indexOfAdministrator(administrator);
-    if (index < 0) { printNotFoundError(name, administrator->getEntityType()); return *this; }
+    if (index < 0) throw ObjectNotFoundException(branchLabel(name), administrator->getEntityType());
     administrators.removeAt(index);
     return *this;
 }
 
 Filial& Filial::operator-=(std::shared_ptr<Appointment> appointment) {
-    if (!appointment) { printNullObjectError(name, "Appointment"); return *this; }
+    if (!appointment) throw NullObjectException(branchLabel(name), "Appointment");
     int index = indexOfAppointment(appointment);
-    if (index < 0) { printNotFoundError(name, appointment->getEntityType()); return *this; }
+    if (index < 0) throw ObjectNotFoundException(branchLabel(name), appointment->getEntityType());
     appointments.removeAt(index);
     return *this;
 }

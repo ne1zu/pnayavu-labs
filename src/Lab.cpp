@@ -563,8 +563,13 @@ public:
     explicit TraceGuard(const string& text) : label(text) {
         cout << "  [enter] " << label << "\n";
     }
-    ~TraceGuard() {
-        cout << "  [leave] " << label << " (destructor called)\n";
+    ~TraceGuard() noexcept {
+        try {
+            cout << " [leave] " << label << " (destructor called)\n";
+        }
+        catch (...) {
+           
+        }
     }
     TraceGuard(const TraceGuard&) = delete;
     TraceGuard& operator=(const TraceGuard&) = delete;

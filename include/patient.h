@@ -12,6 +12,7 @@ private:
 
 public:
     Patient(std::string_view name = "", int age = 0, std::string_view phone = "");
+    Patient(int id, std::string_view name, int age, std::string_view phone);
 
     int getAge() const;
     std::string getPhone() const;

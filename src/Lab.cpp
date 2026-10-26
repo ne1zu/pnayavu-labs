@@ -4,6 +4,9 @@
 #include <memory>
 #include <limits>
 #include <stdexcept>
+#include <cstdio>
+#include <filesystem>
+#include <utility>
 #include "service.h"
 #include "doctor.h"
 #include "patient.h"
@@ -13,16 +16,18 @@
 #include "collection.h"
 #include "appointment.h"
 #include "exceptions/exceptions.h"
+#include "clinic_data.h"
+#include "data_storage.h"
+#include "logger.h"
+#include "report_writer.h"
 
 using namespace std;
 
-struct ClinicData {
-    vector<shared_ptr<Service>> services;
-    vector<shared_ptr<Doctor>> doctors;
-    vector<shared_ptr<Patient>> patients;
-    vector<shared_ptr<Administrator>> administrators;
-    vector<shared_ptr<Filial>> filials;
-};
+const char* const STATE_FILE_NAME = "clinic_state.txt";
+const char* const LOG_FILE_NAME = "clinic_log.txt";
+const char* const REPORT_FILE_NAME = "clinic_report.txt";
+
+Logger logger(LOG_FILE_NAME);
 
 bool isSeniorDoctor(const Doctor& doctor) { return doctor.getExperience() >= 10; }
 bool isMidDoctor(const Doctor& doctor) { return doctor.getExperience() >= 5; }
@@ -145,6 +150,7 @@ void createAndStore(vector<shared_ptr<T>>& list) {
     }
     list.push_back(make_shared<T>(candidate));
     cout << "[OK] Object created.\n";
+    logger.log("CREATE", candidate.getEntityType() + " '" + candidate.getName() + "'");
 }
 
 template <typename T>
@@ -173,13 +179,17 @@ void compareTwo(const vector<shared_ptr<T>>& list) {
 template <typename T>
 void assignToFilial(Filial& filial, const vector<shared_ptr<T>>& list) {
     shared_ptr<T> item = pickFromList(list);
-    if (item) filial += item;
+    if (!item) return;
+    filial += item;
+    logger.log("ASSIGN", item->getEntityType() + " '" + item->getName() + "' -> branch '" + filial.getName() + "'");
 }
 
 template <typename T>
 void removeFromFilial(Filial& filial, const vector<shared_ptr<T>>& list) {
     shared_ptr<T> item = pickFromList(list);
-    if (item) filial -= item;
+    if (!item) return;
+    filial -= item;
+    logger.log("REMOVE", item->getEntityType() + " '" + item->getName() + "' <- branch '" + filial.getName() + "'");
 }
 
 template <typename T>
@@ -192,6 +202,7 @@ void deleteEverywhere(const vector<shared_ptr<Filial>>& filials, vector<shared_p
     }
     list.erase(list.begin() + index);
     cout << "[OK] Object deleted.\n";
+    logger.log("DELETE", victim->getEntityType() + " '" + victim->getName() + "'");
 }
 
 void createObject(ClinicData& data) {
@@ -319,6 +330,7 @@ void bookAppointment(ClinicData& data) {
 
     *filial += appointment;
     cout << "[OK] Booked: " << *appointment << "\n";
+    logger.log("BOOK", "Appointment #" + to_string(appointment->getId()) + ", branch '" + filial->getName() + "'");
 }
 
 void showAppointments(ClinicData& data) {
@@ -374,6 +386,7 @@ void cancelAppointment(ClinicData& data) {
 
     *filial -= appointment;
     cout << "[OK] Appointment cancelled.\n";
+    logger.log("CANCEL", "Appointment #" + to_string(appointment->getId()) + ", branch '" + filial->getName() + "'");
 }
 
 void demoAddAndSize() {
@@ -564,12 +577,7 @@ public:
         cout << "  [enter] " << label << "\n";
     }
     ~TraceGuard() noexcept {
-        try {
-            cout << " [leave] " << label << " (destructor called)\n";
-        }
-        catch (...) {
-           
-        }
+        printf("  [leave] %s (destructor called)\n", label.c_str());
     }
     TraceGuard(const TraceGuard&) = delete;
     TraceGuard& operator=(const TraceGuard&) = delete;
@@ -628,7 +636,6 @@ void scenarioConstructor() {
         cout << "Object:     the branch was never created\n";
         printContinues();
     }
-   
 }
 
 void scenarioInvalidDateTime() {
@@ -1015,11 +1022,33 @@ void fillDemoData(ClinicData& data) {
     south += data.administrators[2];
 }
 
+void saveState(const ClinicData& data) {
+    DataStorage storage(STATE_FILE_NAME);
+    storage.save(data);
+    cout << "[OK] State saved to '" << STATE_FILE_NAME << "'.\n";
+    logger.log("SAVE", string("State saved to ") + STATE_FILE_NAME);
+}
+
+void loadState(ClinicData& data) {
+    DataStorage storage(STATE_FILE_NAME);
+    data = storage.load();
+    cout << "[OK] State loaded from '" << STATE_FILE_NAME << "'.\n";
+    logger.log("LOAD", string("State loaded from ") + STATE_FILE_NAME);
+}
+
+void makeReport(const ClinicData& data) {
+    ReportWriter writer(REPORT_FILE_NAME);
+    writer.write(data);
+    cout << "[OK] Report saved to '" << REPORT_FILE_NAME << "'.\n";
+    logger.log("REPORT", string("Report created in ") + REPORT_FILE_NAME);
+}
+
 void printMainMenu() {
     cout << "\n1. View Branches\n2. View Doctors\n3. View Services\n4. View Patients\n5. View Admins\n"
         << "6. Create Object\n7. Assign Object\n8. Remove Object\n9. Compare\n10. Delete Object\n"
         << "11. Check Service\n12. Find Admin\n13. Polymorphic Overview\n14. Book Appt\n15. View Appts\n"
-        << "16. Cancel Appt\n17. Collection Demo\n18. Exceptions Demo\n0. Exit\nChoice: ";
+        << "16. Cancel Appt\n17. Collection Demo\n18. Exceptions Demo\n"
+        << "19. Save State\n20. Load State\n21. Make Report\n0. Exit\nChoice: ";
 }
 
 void executeMenuChoice(ClinicData& data, int choice) {
@@ -1044,6 +1073,9 @@ void executeMenuChoice(ClinicData& data, int choice) {
     case 16: cancelAppointment(data); break;
     case 17: runCollectionDemo(data); break;
     case 18: runExceptionsDemo(); break;
+    case 19: saveState(data); break;
+    case 20: loadState(data); break;
+    case 21: makeReport(data); break;
     case 0:
     case -1:
         break;
@@ -1053,71 +1085,118 @@ void executeMenuChoice(ClinicData& data, int choice) {
     }
 }
 
+void reportProblem(const string& tag, const string& message, const string& hint) {
+    cout << "[" << tag << "] " << message << "\n";
+    if (!hint.empty()) cout << hint << "\n";
+    logger.log("ERROR", "[" + tag + "] " + message);
+}
+
 void runMenuSafely(ClinicData& data, int choice) {
     try {
         executeMenuChoice(data, choice);
     }
     catch (const InvalidDateTimeException& error) {
-        cout << "[INVALID DATE/TIME] " << error.what() << "\n"
-            << "Hint: enter the date as 'day month year' and the time as 'hour minute'.\n";
+        reportProblem("INVALID DATE/TIME", error.what(),
+            "Hint: enter the date as 'day month year' and the time as 'hour minute'.");
     }
     catch (const InvalidDataException& error) {
-        cout << "[INVALID DATA] " << error.what() << "\n"
-            << "Nothing was changed. Check the field '" << error.getField() << "' and try again.\n";
+        reportProblem("INVALID DATA", error.what(),
+            "Nothing was changed. Check the field '" + error.getField() + "' and try again.");
     }
     catch (const NullObjectException& error) {
-        cout << "[EMPTY OBJECT] " << error.what() << "\n"
-            << "The operation was skipped.\n";
+        reportProblem("EMPTY OBJECT", error.what(), "The operation was skipped.");
     }
     catch (const DuplicateObjectException& error) {
-        cout << "[DUPLICATE] " << error.what() << "\n"
-            << "Choose another " << error.getObjectType() << ".\n";
+        reportProblem("DUPLICATE", error.what(), "Choose another " + error.getObjectType() + ".");
     }
     catch (const ObjectNotFoundException& error) {
-        cout << "[NOT FOUND] " << error.what() << "\n"
-            << "Look at the content of the branch with menu item 1.\n";
+        reportProblem("NOT FOUND", error.what(), "Look at the content of the branch with menu item 1.");
     }
     catch (const CapacityExceededException& error) {
-        cout << "[CAPACITY] " << error.what() << "\n"
-            << "Remove a " << error.getObjectType() << " from the branch (menu item 8) or use another branch.\n";
+        reportProblem("CAPACITY", error.what(),
+            "Remove a " + error.getObjectType() + " from the branch (menu item 8) or use another branch.");
     }
     catch (const LinkViolationException& error) {
-        cout << "[BROKEN LINK] " << error.what() << "\n"
-            << "Assign the missing object to the branch first (menu item 7).\n";
+        reportProblem("BROKEN LINK", error.what(), "Assign the missing object to the branch first (menu item 7).");
     }
     catch (const WorkingHoursException& error) {
-        cout << "[WORKING HOURS] " << error.what() << "\n"
-            << "Choose an earlier start or a shorter service.\n";
+        reportProblem("WORKING HOURS", error.what(), "Choose an earlier start or a shorter service.");
     }
     catch (const ScheduleConflictException& error) {
-        cout << "[SCHEDULE CONFLICT] " << error.what() << "\n"
-            << "Choose another time or another " << error.getPersonType() << ".\n";
+        reportProblem("SCHEDULE CONFLICT", error.what(), "Choose another time or another " + error.getPersonType() + ".");
     }
     catch (const InvalidOperationException& error) {
-        cout << "[NOT ALLOWED] " << error.what() << "\n";
+        reportProblem("NOT ALLOWED", error.what(), "");
     }
     catch (const IndexOutOfRangeException& error) {
-        cout << "[INDEX] " << error.what() << "\n";
+        reportProblem("INDEX", error.what(), "");
+    }
+    catch (const FileOpenException& error) {
+        reportProblem("FILE", error.what(), "The state of the program was not changed.");
+    }
+    catch (const FileIOException& error) {
+        reportProblem("FILE I/O", error.what(), "The state of the program was not changed.");
+    }
+    catch (const FileFormatException& error) {
+        reportProblem("DAMAGED FILE", error.what(), "The file was not loaded. The state of the program was not changed.");
     }
     catch (const ClinicException& error) {
-        cout << "[CLINIC ERROR] " << error.what() << "\n";
+        reportProblem("CLINIC ERROR", error.what(), "");
     }
     catch (const exception& error) {
-        cout << "[SYSTEM ERROR] " << error.what() << "\n";
+        reportProblem("SYSTEM ERROR", error.what(), "");
     }
     catch (...) {
         cout << "[UNKNOWN ERROR] An unexpected error was caught, the program continues.\n";
+        logger.log("ERROR", "An exception of an unknown type");
+    }
+}
+
+bool initializeState(ClinicData& data) {
+    error_code error;
+    if (!filesystem::exists(STATE_FILE_NAME, error)) {
+        try {
+            fillDemoData(data);
+            logger.log("SEED", "No saved state, demo data created");
+        }
+        catch (const ClinicException& problem) {
+            reportProblem("ERROR", string("Start data was not loaded completely: ") + problem.what(), "");
+        }
+        return true;
+    }
+
+    try {
+        DataStorage storage(STATE_FILE_NAME);
+        data = storage.load();
+        cout << "[OK] State restored from '" << STATE_FILE_NAME << "'.\n";
+        logger.log("AUTOLOAD", string("State loaded from ") + STATE_FILE_NAME + " at start");
+        return true;
+    }
+    catch (const ClinicException& problem) {
+        reportProblem("DAMAGED FILE", problem.what(), "The program starts with an empty state.");
+        cout << "Auto-save at exit is switched off, so that the file '" << STATE_FILE_NAME
+            << "' is not overwritten. Use menu item 19 to save manually.\n";
+        logger.log("AUTOSAVE_DISABLED", "The state file could not be loaded");
+        return false;
+    }
+}
+
+void autoSaveState(const ClinicData& data) {
+    try {
+        DataStorage storage(STATE_FILE_NAME);
+        storage.save(data);
+        cout << "[OK] State saved to '" << STATE_FILE_NAME << "' at exit.\n";
+        logger.log("AUTOSAVE", string("State saved to ") + STATE_FILE_NAME + " at exit");
+    }
+    catch (const ClinicException& problem) {
+        reportProblem("FILE", problem.what(), "The state was not saved at exit.");
     }
 }
 
 int main() {
     ClinicData data;
-    try {
-        fillDemoData(data);
-    }
-    catch (const ClinicException& error) {
-        cout << "[ERROR] Start data was not loaded completely: " << error.what() << "\n";
-    }
+    logger.log("START", "Program started");
+    bool autoSaveEnabled = initializeState(data);
 
     int mainChoice = -1;
     while (mainChoice != 0) {
@@ -1125,5 +1204,8 @@ int main() {
         mainChoice = readMenuChoice();
         runMenuSafely(data, mainChoice);
     }
+
+    if (autoSaveEnabled) autoSaveState(data);
+    logger.log("EXIT", "Program finished");
     return 0;
 }

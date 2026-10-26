@@ -1,7 +1,7 @@
 #include "person.h"
 
-Person::Person(std::string_view name, int& typeCounter) : name(name) {
-    id = typeCounter++;
+Person::Person(int idValue, std::string_view name, int& typeCounter) : id(idValue), name(name) {
+    if (typeCounter <= idValue) typeCounter = idValue + 1;
 }
 
 int Person::getId() const { return id; }

@@ -4,7 +4,12 @@
 int Service::counter = 0;
 
 Service::Service(std::string_view name, float priceValue, int lengthValue)
-    : id(counter++), name(name), price(0.0f), length(0) {
+    : Service(counter, name, priceValue, lengthValue) {
+}
+
+Service::Service(int idValue, std::string_view name, float priceValue, int lengthValue)
+    : id(idValue), name(name), price(0.0f), length(0) {
+    if (counter <= idValue) counter = idValue + 1;
     setPrice(priceValue);
     if (lengthValue < 0) {
         throw InvalidDataException("duration", "must not be negative, got " + std::to_string(lengthValue));

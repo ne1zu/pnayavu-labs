@@ -7,8 +7,15 @@ int Appointment::counter = 0;
 Appointment::Appointment(std::shared_ptr<Patient> patient, std::shared_ptr<Doctor> doctor,
     std::shared_ptr<Service> service, std::string_view filialName,
     int day, int month, int year, int hour, int minute)
-    : id(counter++), patient(patient), doctor(doctor), service(service), filialName(filialName),
+    : Appointment(counter, patient, doctor, service, filialName, day, month, year, hour, minute) {
+}
+
+Appointment::Appointment(int idValue, std::shared_ptr<Patient> patient, std::shared_ptr<Doctor> doctor,
+    std::shared_ptr<Service> service, std::string_view filialName,
+    int day, int month, int year, int hour, int minute)
+    : id(idValue), patient(patient), doctor(doctor), service(service), filialName(filialName),
     day(day), month(month), year(year), hour(hour), minute(minute) {
+    if (counter <= idValue) counter = idValue + 1;
 }
 
 int Appointment::getId() const { return id; }

@@ -43,6 +43,11 @@ public:
     int getPatientCount() const;
     int getAdministratorCount() const;
     int getAppointmentCount() const;
+    int getDoctorCapacity() const;
+    int getServiceCapacity() const;
+    int getPatientCapacity() const;
+    int getAdministratorCapacity() const;
+    int getAppointmentCapacity() const;
 
     void setName(std::string_view nameValue);
     void setAddress(std::string_view addressValue);
@@ -52,6 +57,8 @@ public:
     Filial& operator+=(std::shared_ptr<Patient> patient);
     Filial& operator+=(std::shared_ptr<Administrator> administrator);
     Filial& operator+=(std::shared_ptr<Appointment> appointment);
+
+    void restorePatient(std::shared_ptr<Patient> patient);
 
     Filial& operator-=(std::shared_ptr<Doctor> doctor);
     Filial& operator-=(std::shared_ptr<Service> service);
@@ -81,6 +88,7 @@ private:
     bool hasSpaceForAdministrator() const;
     bool hasSpaceForAppointment() const;
     bool hasAnyDoctor() const;
+    void storePatient(const std::shared_ptr<Patient>& patient);
 
     int indexOfDoctor(const std::shared_ptr<Doctor>& doctor) const;
     int indexOfService(const std::shared_ptr<Service>& service) const;

@@ -30,6 +30,9 @@ public:
     Appointment(std::shared_ptr<Patient> patient, std::shared_ptr<Doctor> doctor,
         std::shared_ptr<Service> service, std::string_view filialName,
         int day, int month, int year, int hour, int minute);
+    Appointment(int id, std::shared_ptr<Patient> patient, std::shared_ptr<Doctor> doctor,
+        std::shared_ptr<Service> service, std::string_view filialName,
+        int day, int month, int year, int hour, int minute);
 
     int getId() const;
     std::shared_ptr<Patient> getPatient() const;

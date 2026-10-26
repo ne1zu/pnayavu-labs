@@ -5,7 +5,12 @@ int Administrator::counter = 0;
 
 Administrator::Administrator(std::string_view name, std::string_view position,
     int experienceValue, int patientsPerDayValue)
-    : Person(name, counter), position(position), experience(0), patientsPerDay(0) {
+    : Administrator(counter, name, position, experienceValue, patientsPerDayValue) {
+}
+
+Administrator::Administrator(int id, std::string_view name, std::string_view position,
+    int experienceValue, int patientsPerDayValue)
+    : Person(id, name, counter), position(position), experience(0), patientsPerDay(0) {
     setExperience(experienceValue);
     setPatientsPerDay(patientsPerDayValue);
 }

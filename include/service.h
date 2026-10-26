@@ -13,6 +13,7 @@ private:
 
 public:
     Service(std::string_view name = "", float price = 0.0f, int length = 0);
+    Service(int id, std::string_view name, float price, int length);
 
     int getId() const;
     std::string getName() const;

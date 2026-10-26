@@ -4,7 +4,11 @@
 int Patient::counter = 0;
 
 Patient::Patient(std::string_view name, int ageValue, std::string_view phone)
-    : Person(name, counter), age(0), phone(phone) {
+    : Patient(counter, name, ageValue, phone) {
+}
+
+Patient::Patient(int id, std::string_view name, int ageValue, std::string_view phone)
+    : Person(id, name, counter), age(0), phone(phone) {
     setAge(ageValue);
 }
 

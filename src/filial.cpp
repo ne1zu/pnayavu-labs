@@ -56,6 +56,12 @@ int Filial::getPatientCount() const { return patients.getCount(); }
 int Filial::getAdministratorCount() const { return administrators.getCount(); }
 int Filial::getAppointmentCount() const { return appointments.getCount(); }
 
+int Filial::getDoctorCapacity() const { return doctorCapacity; }
+int Filial::getServiceCapacity() const { return serviceCapacity; }
+int Filial::getPatientCapacity() const { return patientCapacity; }
+int Filial::getAdministratorCapacity() const { return administratorCapacity; }
+int Filial::getAppointmentCapacity() const { return appointmentCapacity; }
+
 Collection<Doctor> Filial::getDoctors() const { return doctors; }
 Collection<Service> Filial::getServices() const { return services; }
 Collection<Patient> Filial::getPatients() const { return patients; }
@@ -159,10 +165,19 @@ Filial& Filial::operator+=(std::shared_ptr<Patient> patient) {
         throw InvalidOperationException(branchLabel(name), "add " + patient->getEntityType(),
             "add a doctor to the branch first");
     }
+    storePatient(patient);
+    return *this;
+}
+
+void Filial::restorePatient(std::shared_ptr<Patient> patient) {
+    if (!patient) throw NullObjectException(branchLabel(name), "Patient");
+    storePatient(patient);
+}
+
+void Filial::storePatient(const std::shared_ptr<Patient>& patient) {
     if (indexOfPatient(patient) >= 0) throw DuplicateObjectException(branchLabel(name), patient->getEntityType());
     if (!hasSpaceForPatient()) throw CapacityExceededException(branchLabel(name), patient->getEntityType(), patientCapacity);
     patients.add(patient);
-    return *this;
 }
 
 Filial& Filial::operator+=(std::shared_ptr<Administrator> administrator) {

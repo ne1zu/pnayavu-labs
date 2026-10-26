@@ -9,7 +9,7 @@ protected:
     std::string name;
 
 public:
-    Person(std::string_view name, int& typeCounter);
+    Person(int id, std::string_view name, int& typeCounter);
     virtual ~Person() = default;
 
     int getId() const;

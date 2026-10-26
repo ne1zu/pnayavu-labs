@@ -11,3 +11,7 @@
 #include "schedule_conflict_exception.h"
 #include "invalid_operation_exception.h"
 #include "index_out_of_range_exception.h"
+
+#include "file_open_exception.h"
+#include "file_io_exception.h"
+#include "file_format_exception.h"

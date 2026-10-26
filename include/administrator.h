@@ -14,6 +14,8 @@ private:
 public:
     Administrator(std::string_view name = "", std::string_view position = "",
         int experience = 0, int patientsPerDay = 0);
+    Administrator(int id, std::string_view name, std::string_view position,
+        int experience, int patientsPerDay);
 
     std::string getPosition() const;
     int getExperience() const;

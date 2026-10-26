@@ -12,6 +12,7 @@ private:
 
 public:
     Doctor(std::string_view name = "", std::string_view specialty = "", int experience = 0);
+    Doctor(int id, std::string_view name, std::string_view specialty, int experience);
 
     std::string getSpecialty() const;
     int getExperience() const;

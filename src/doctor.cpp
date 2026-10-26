@@ -4,7 +4,11 @@
 int Doctor::counter = 0;
 
 Doctor::Doctor(std::string_view name, std::string_view specialty, int experienceValue)
-    : Person(name, counter), specialty(specialty), experience(0) {
+    : Doctor(counter, name, specialty, experienceValue) {
+}
+
+Doctor::Doctor(int id, std::string_view name, std::string_view specialty, int experienceValue)
+    : Person(id, name, counter), specialty(specialty), experience(0) {
     setExperience(experienceValue);
 }
 

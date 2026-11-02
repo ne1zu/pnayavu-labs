@@ -13,6 +13,7 @@ namespace {
     const string FORMAT_HEADER = "CLINIC_STATE";
     const int FORMAT_VERSION = 1;
     const int MAX_ID = 1000000000;
+
     const string SERVICES_SECTION = "SERVICES";
     const string DOCTORS_SECTION = "DOCTORS";
     const string PATIENTS_SECTION = "PATIENTS";
@@ -20,7 +21,6 @@ namespace {
     const string FILIALS_SECTION = "FILIALS";
     const string LINKS_SECTION = "LINKS";
     const string APPOINTMENTS_SECTION = "APPOINTMENTS";
-    const string FORBIDDEN_CHARS = "!\r\n";
 
     const string DOCTOR_CODE = "DOCTOR";
     const string SERVICE_CODE = "SERVICE";
@@ -47,7 +47,7 @@ namespace {
     };
 
     void checkText(const string& value, const string& description) {
-        if (value.find_first_of(string(1, FIELD_SEPARATOR) + FORBIDDEN_CHARS) != string::npos) {
+        if (value.find_first_of(string(1, FIELD_SEPARATOR) + "\r\n") != string::npos) {
             throw InvalidDataException(description, "must not contain '" + string(1, FIELD_SEPARATOR)
                 + "' or a line break, got \"" + value + "\"");
         }
@@ -165,10 +165,6 @@ namespace {
         }
     }
 
-    [[noreturn]] void fail(const LoadContext& ctx, const string& message) {
-        throw FileFormatException(ctx.lineNumber, message);
-    }
-
     string readLine(LoadContext& ctx) {
         string line;
         if (!getline(ctx.file, line)) {
@@ -196,7 +192,7 @@ namespace {
     vector<string> readFields(LoadContext& ctx, size_t expectedCount) {
         vector<string> fields = splitLine(readLine(ctx));
         if (fields.size() != expectedCount) {
-            fail(ctx, "expected " + to_string(expectedCount) + " fields, got " + to_string(fields.size()));
+            throw FileFormatException(ctx.lineNumber, "expected " + to_string(expectedCount) + " fields, got " + to_string(fields.size()));
         }
         return fields;
     }
@@ -205,7 +201,7 @@ namespace {
         istringstream in(text);
         int value = 0;
         if (text.empty() || !(in >> value) || !in.eof()) {
-            fail(ctx, "field '" + field + "' must be an integer, got \"" + text + "\"");
+            throw FileFormatException(ctx.lineNumber, "field '" + field + "' must be an integer, got \"" + text + "\"");
         }
         return value;
     }
@@ -214,7 +210,7 @@ namespace {
         istringstream in(text);
         float value = 0.0f;
         if (text.empty() || !(in >> value) || !in.eof() || !isfinite(value)) {
-            fail(ctx, "field '" + field + "' must be a number, got \"" + text + "\"");
+            throw FileFormatException(ctx.lineNumber, "field '" + field + "' must be a number, got \"" + text + "\"");
         }
         return value;
     }
@@ -222,22 +218,23 @@ namespace {
     int parseId(const string& text, const LoadContext& ctx, const string& field) {
         int value = parseInt(text, ctx, field);
         if (value < 0 || value > MAX_ID) {
-            fail(ctx, "field '" + field + "' must be between 0 and " + to_string(MAX_ID) + ", got " + text);
+            throw FileFormatException(ctx.lineNumber, "field '" + field + "' must be between 0 and " + to_string(MAX_ID) + ", got " + text);
         }
         return value;
     }
 
     void requireText(const string& text, const LoadContext& ctx, const string& field) {
-        if (text.empty()) fail(ctx, "field '" + field + "' must not be empty");
-        if (text.find_first_of(FORBIDDEN_CHARS) != string::npos) {
-            fail(ctx, "field '" + field + "' contains forbidden characters ('|', '!', or line breaks)");
+        if (text.empty()) {
+            throw FileFormatException(ctx.lineNumber, "field '" + field + "' must not be empty");
         }
     }
 
     template <typename T>
     void requireNewId(const vector<shared_ptr<T>>& list, int id, const LoadContext& ctx, const string& kind) {
         for (const auto& item : list) {
-            if (item->getId() == id) fail(ctx, "duplicate " + kind + " id " + to_string(id));
+            if (item->getId() == id) {
+                throw FileFormatException(ctx.lineNumber, "duplicate " + kind + " id " + to_string(id));
+            }
         }
     }
 
@@ -246,7 +243,7 @@ namespace {
         for (const auto& item : list) {
             if (item->getId() == id) return item;
         }
-        fail(ctx, kind + " with id " + to_string(id) + " does not exist");
+        throw FileFormatException(ctx.lineNumber, kind + " with id " + to_string(id) + " does not exist");
     }
 
     shared_ptr<Filial> findFilial(const LoadContext& ctx, const string& name) {
@@ -258,31 +255,35 @@ namespace {
 
     shared_ptr<Filial> requireFilial(const LoadContext& ctx, const string& name) {
         shared_ptr<Filial> filial = findFilial(ctx, name);
-        if (!filial) fail(ctx, "branch '" + name + "' is not described in the section " + FILIALS_SECTION);
+        if (!filial) {
+            throw FileFormatException(ctx.lineNumber, "branch '" + name + "' is not described in the section " + FILIALS_SECTION);
+        }
         return filial;
     }
 
     void readHeader(LoadContext& ctx) {
         vector<string> fields = splitLine(readLine(ctx));
         if (fields[0] != FORMAT_HEADER) {
-            fail(ctx, "this is not a clinic state file (the header '" + FORMAT_HEADER + "' was expected)");
+            throw FileFormatException(ctx.lineNumber, "this is not a clinic state file (the header '" + FORMAT_HEADER + "' was expected)");
         }
         if (fields.size() != HEADER_FIELD_COUNT) {
-            fail(ctx, "expected " + to_string(HEADER_FIELD_COUNT) + " fields, got " + to_string(fields.size()));
+            throw FileFormatException(ctx.lineNumber, "expected " + to_string(HEADER_FIELD_COUNT) + " fields, got " + to_string(fields.size()));
         }
         int version = parseInt(fields[1], ctx, "format version");
         if (version != FORMAT_VERSION) {
-            fail(ctx, "unsupported format version " + to_string(version) + " (supported: " + to_string(FORMAT_VERSION) + ")");
+            throw FileFormatException(ctx.lineNumber, "unsupported format version " + to_string(version) + " (supported: " + to_string(FORMAT_VERSION) + ")");
         }
     }
 
     int readSectionHeader(LoadContext& ctx, const string& sectionName) {
         vector<string> fields = readFields(ctx, SECTION_FIELD_COUNT);
         if (fields[0] != sectionName) {
-            fail(ctx, "section '" + sectionName + "' was expected, got \"" + fields[0] + "\"");
+            throw FileFormatException(ctx.lineNumber, "section '" + sectionName + "' was expected, got \"" + fields[0] + "\"");
         }
         int count = parseInt(fields[1], ctx, "number of records");
-        if (count < 0) fail(ctx, "number of records must not be negative, got " + to_string(count));
+        if (count < 0) {
+            throw FileFormatException(ctx.lineNumber, "number of records must not be negative, got " + to_string(count));
+        }
         return count;
     }
 
@@ -294,7 +295,9 @@ namespace {
             requireText(f[1], ctx, "service name");
             float price = parseFloat(f[2], ctx, "price");
             int length = parseInt(f[3], ctx, "duration");
-            if (length <= 0) fail(ctx, "duration must be positive, got " + f[3]);
+            if (length <= 0) {
+                throw FileFormatException(ctx.lineNumber, "duration must be positive, got " + f[3]);
+            }
             requireNewId(ctx.data.services, id, ctx, "Service");
             ctx.data.services.push_back(make_shared<Service>(id, f[1], price, length));
         }
@@ -342,7 +345,9 @@ namespace {
         for (int i = 0; i < count; i++) {
             vector<string> f = readFields(ctx, FILIAL_FIELD_COUNT);
             requireText(f[0], ctx, "branch name");
-            if (findFilial(ctx, f[0])) fail(ctx, "duplicate branch name '" + f[0] + "'");
+            if (findFilial(ctx, f[0])) {
+                throw FileFormatException(ctx.lineNumber, "duplicate branch name '" + f[0] + "'");
+            }
             int doctors = parseInt(f[2], ctx, "doctor capacity");
             int services = parseInt(f[3], ctx, "service capacity");
             int patients = parseInt(f[4], ctx, "patient capacity");
@@ -362,7 +367,9 @@ namespace {
             else if (f[1] == SERVICE_CODE) *filial += requireExisting(ctx.data.services, id, ctx, "Service");
             else if (f[1] == PATIENT_CODE) filial->restorePatient(requireExisting(ctx.data.patients, id, ctx, "Patient"));
             else if (f[1] == ADMINISTRATOR_CODE) *filial += requireExisting(ctx.data.administrators, id, ctx, "Administrator");
-            else fail(ctx, "unknown object type \"" + f[1] + "\"");
+            else {
+                throw FileFormatException(ctx.lineNumber, "unknown object type \"" + f[1] + "\"");
+            }
         }
     }
 
@@ -389,7 +396,9 @@ namespace {
             int year = parseInt(f[7], ctx, "year");
             int hour = parseInt(f[8], ctx, "hour");
             int minute = parseInt(f[9], ctx, "minute");
-            if (appointmentIdExists(ctx, id)) fail(ctx, "duplicate Appointment id " + to_string(id));
+            if (appointmentIdExists(ctx, id)) {
+                throw FileFormatException(ctx.lineNumber, "duplicate Appointment id " + to_string(id));
+            }
             *filial += make_shared<Appointment>(id, patient, doctor, service, f[1], day, month, year, hour, minute);
         }
     }
@@ -399,7 +408,9 @@ namespace {
         while (getline(ctx.file, line)) {
             ctx.lineNumber++;
             if (!line.empty() && line.back() == '\r') line.pop_back();
-            if (!line.empty()) fail(ctx, "extra data after the last record");
+            if (!line.empty()) {
+                throw FileFormatException(ctx.lineNumber, "extra data after the last record");
+            }
         }
         if (!ctx.file.eof()) throw FileIOException(ctx.filename, "reading");
     }

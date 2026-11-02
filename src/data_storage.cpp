@@ -13,7 +13,6 @@ namespace {
     const string FORMAT_HEADER = "CLINIC_STATE";
     const int FORMAT_VERSION = 1;
     const int MAX_ID = 1000000000;
-
     const string SERVICES_SECTION = "SERVICES";
     const string DOCTORS_SECTION = "DOCTORS";
     const string PATIENTS_SECTION = "PATIENTS";
@@ -21,6 +20,7 @@ namespace {
     const string FILIALS_SECTION = "FILIALS";
     const string LINKS_SECTION = "LINKS";
     const string APPOINTMENTS_SECTION = "APPOINTMENTS";
+    const string FORBIDDEN_CHARS = "!\r\n";
 
     const string DOCTOR_CODE = "DOCTOR";
     const string SERVICE_CODE = "SERVICE";
@@ -47,7 +47,7 @@ namespace {
     };
 
     void checkText(const string& value, const string& description) {
-        if (value.find_first_of(string(1, FIELD_SEPARATOR) + "\r\n") != string::npos) {
+        if (value.find_first_of(string(1, FIELD_SEPARATOR) + FORBIDDEN_CHARS) != string::npos) {
             throw InvalidDataException(description, "must not contain '" + string(1, FIELD_SEPARATOR)
                 + "' or a line break, got \"" + value + "\"");
         }
@@ -229,6 +229,9 @@ namespace {
 
     void requireText(const string& text, const LoadContext& ctx, const string& field) {
         if (text.empty()) fail(ctx, "field '" + field + "' must not be empty");
+        if (text.find_first_of(FORBIDDEN_CHARS) != string::npos) {
+            fail(ctx, "field '" + field + "' contains forbidden characters ('|', '!', or line breaks)");
+        }
     }
 
     template <typename T>

@@ -99,6 +99,7 @@ namespace {
         printList("vector patients", analyzer.getPatients());
         printList("vector services", analyzer.getServices());
         printList("list appointments", analyzer.getAppointments());
+        printGroups("map doctors by specialty", analyzer.getDoctorsBySpecialty());
         showSizes(analyzer);
     }
 

@@ -975,7 +975,17 @@ void fillDemoData(ClinicData& data) {
     data.filials.push_back(make_shared<Filial>("Central Clinic", "Main st 10"));
     data.filials.push_back(make_shared<Filial>("North Branch", "Cold st 1"));
     data.filials.push_back(make_shared<Filial>("South Branch", "Sunny blvd 99"));
+    *data.filials[0] += make_shared<Appointment>(data.patients[0], data.doctors[0], data.services[0],
+        data.filials[0]->getName(), 15, 11, 2026, 9, 30);  
+    *data.filials[0] += make_shared<Appointment>(data.patients[2], data.doctors[1], data.services[2],
+        data.filials[0]->getName(), 15, 11, 2026, 14, 0); 
 
+   
+    *data.filials[1] += make_shared<Appointment>(data.patients[1], data.doctors[3], data.services[3],
+        data.filials[1]->getName(), 16, 11, 2026, 10, 15); 
+
+    *data.filials[2] += make_shared<Appointment>(data.patients[3], data.doctors[2], data.services[1],
+        data.filials[2]->getName(), 17, 11, 2026, 16, 30); 
     Filial& central = *data.filials[0];
     central += data.doctors[0];
     central += data.doctors[1];

@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <limits>
 #include <stdexcept>
 #include <cstdio>
 #include <filesystem>
@@ -20,6 +19,8 @@
 #include "data_storage.h"
 #include "logger.h"
 #include "report_writer.h"
+#include "console_input.h"
+#include "stl_menu.h"
 
 using namespace std;
 
@@ -37,27 +38,6 @@ bool isMorningAppointment(const Appointment& appointment) { return appointment.i
 bool isNotMorningAppointment(const Appointment& appointment) { return !appointment.isMorning(); }
 bool isEvenNumber(const int& number) { return number % 2 == 0; }
 bool isLongWord(const string& word) { return word.size() > 4; }
-
-bool readInt(int& value) {
-    if (cin >> value) return true;
-    if (cin.eof()) return false;
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    return false;
-}
-
-int readMenuChoice() {
-    int choice;
-    if (readInt(choice)) return choice;
-    if (cin.eof()) return 0;
-    cout << "[ERROR] Enter a number from the menu.\n";
-    return -1;
-}
-
-void discardRestOfLine() {
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-}
 
 template <typename T>
 void printAll(const vector<shared_ptr<T>>& list) {
@@ -1048,7 +1028,7 @@ void printMainMenu() {
         << "6. Create Object\n7. Assign Object\n8. Remove Object\n9. Compare\n10. Delete Object\n"
         << "11. Check Service\n12. Find Admin\n13. Polymorphic Overview\n14. Book Appt\n15. View Appts\n"
         << "16. Cancel Appt\n17. Collection Demo\n18. Exceptions Demo\n"
-        << "19. Save State\n20. Load State\n21. Make Report\n0. Exit\nChoice: ";
+        << "19. Save State\n20. Load State\n21. Make Report\n22. STL Algorithms\n0. Exit\nChoice: ";
 }
 
 void executeMenuChoice(ClinicData& data, int choice) {
@@ -1076,6 +1056,7 @@ void executeMenuChoice(ClinicData& data, int choice) {
     case 19: saveState(data); break;
     case 20: loadState(data); break;
     case 21: makeReport(data); break;
+    case 22: runStlMenu(data, logger); break;
     case 0:
     case -1:
         break;

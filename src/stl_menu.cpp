@@ -285,7 +285,41 @@ namespace {
         cout << "[OK] Service removed from vector; appointments with it removed from list.\n";
         showSizes(analyzer);
     }
+    void addAppointmentByUser(StlAnalyzer& analyzer) {
+        printList("vector patients", analyzer.getPatients());
+        cout << "Enter patient id: ";
+        int patientId;
+        if (!readInt(patientId)) return;
+        auto patients = analyzer.getPatients();
+        auto pIt = std::find_if(patients.begin(), patients.end(),
+            [patientId](const shared_ptr<Patient>& p) { return p->getId() == patientId; });
+        if (pIt == patients.end()) throw ObjectNotFoundException("STL workspace", "Patient");
 
+        printList("vector doctors", analyzer.getDoctors());
+        cout << "Enter doctor id: ";
+        int doctorId;
+        if (!readInt(doctorId)) return;
+        auto doctor = analyzer.findDoctorById(doctorId);
+        if (!doctor) throw ObjectNotFoundException("STL workspace", "Doctor");
+
+        printList("vector services", analyzer.getServices());
+        cout << "Enter service id: ";
+        int serviceId;
+        if (!readInt(serviceId)) return;
+        auto services = analyzer.getServices();
+        auto sIt = std::find_if(services.begin(), services.end(),
+            [serviceId](const shared_ptr<Service>& s) { return s->getId() == serviceId; });
+        if (sIt == services.end()) throw ObjectNotFoundException("STL workspace", "Service");
+
+        cout << "Enter day, month, hour, minute (e.g. 15 11 10 30): ";
+        int day, month, hour, minute;
+        if (readInt(day) && readInt(month) && readInt(hour) && readInt(minute)) {
+            auto appt = make_shared<Appointment>(*pIt, doctor, *sIt, "Central Clinic", day, month, 2026, hour, minute);
+            analyzer.addAppointment(appt);
+            cout << "[OK] Appointment added to list.\n";
+            showSizes(analyzer);
+        }
+    }
     void cancelAppointmentByUser(StlAnalyzer& analyzer) {
         printList("list appointments", analyzer.getAppointments());
         cout << "Enter appointment id: ";
@@ -367,8 +401,8 @@ namespace {
     void printOwnMenu() {
         cout << "\n=== STL: MY OWN TEST (working copy of the clinic data) ===\n"
             << " 1. Show containers\n 2. Add doctor\n 3. Remove doctor\n 4. Add patient\n 5. Remove patient\n"
-            << " 6. Add service\n 7. Remove service\n 8. Cancel appointment\n 9. Search\n10. Sort\n"
-            << "11. Min / Max\n12. Count by condition\n13. Group / classify\n14. Statistics\n 0. Back\nChoice: ";
+            << " 6. Add service\n 7. Remove service\n 8. Add appointment\n 9. Cancel appointment\n10. Search\n"
+            << "11. Sort\n12. Min / Max\n13. Count by condition\n14. Group / classify\n15. Statistics\n 0. Back\nChoice: ";
     }
 
     void executeOwnChoice(StlAnalyzer& analyzer, int choice) {
@@ -380,13 +414,14 @@ namespace {
         case 5: removePatientByUser(analyzer); break;
         case 6: addServiceByUser(analyzer); break;
         case 7: removeServiceByUser(analyzer); break;
-        case 8: cancelAppointmentByUser(analyzer); break;
-        case 9: searchByUser(analyzer); break;
-        case 10: sortByUser(analyzer); break;
-        case 11: showExtremes(analyzer); break;
-        case 12: countByUser(analyzer); break;
-        case 13: showGroups(analyzer); break;
-        case 14: showStatistics(analyzer); break;
+        case 8: addAppointmentByUser(analyzer); break;
+        case 9: cancelAppointmentByUser(analyzer); break;
+        case 10: searchByUser(analyzer); break;
+        case 11: sortByUser(analyzer); break;
+        case 12: showExtremes(analyzer); break;
+        case 13: countByUser(analyzer); break;
+        case 14: showGroups(analyzer); break;
+        case 15: showStatistics(analyzer); break;
         case 0:
         case -1:
             break;

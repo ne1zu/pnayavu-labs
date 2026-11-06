@@ -110,7 +110,15 @@ void StlAnalyzer::removeService(int id) {
         return appointment->getService()->getId() == id;
     });
 }
-
+void StlAnalyzer::addAppointment(shared_ptr<Appointment> appointment) {
+    if (!appointment) throw NullObjectException("STL workspace", "Appointment");
+    for (const auto& a : appointments) {
+        if (a->getId() == appointment->getId()) {
+            throw DuplicateObjectException("STL workspace", "Appointment");
+        }
+    }
+    appointments.push_back(appointment);
+}
 void StlAnalyzer::cancelAppointment(int id) {
     std::size_t before = appointments.size();
     appointments.remove_if([id](const shared_ptr<Appointment>& appointment) { return appointment->getId() == id; });

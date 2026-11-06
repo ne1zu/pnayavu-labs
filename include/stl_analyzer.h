@@ -79,6 +79,7 @@ public:
     void removePatient(int id);
     void addService(std::shared_ptr<Service> service);
     void removeService(int id);
+    void addAppointment(std::shared_ptr<Appointment> appointment);
     void cancelAppointment(int id);
 
     std::shared_ptr<Doctor> findDoctorById(int id) const;
